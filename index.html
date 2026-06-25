@@ -69,13 +69,11 @@ header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px 26px;margin-bot
 .seg button{border:0;background:transparent;font-family:inherit;font-size:12.5px;color:var(--encre-doux);padding:6px 13px;border-radius:13px;cursor:pointer}
 .seg button.on{background:var(--encre);color:#fff}
 .galaxie{display:grid;grid-template-columns:repeat(auto-fill,minmax(262px,1fr));gap:46px 44px;padding:34px 20px 24px;align-items:start}
-.orbit{animation:orbite var(--odur,20s) ease-in-out var(--odel,0s) infinite;will-change:transform}
+.orbit{will-change:transform}
 .secteur{position:relative;border-radius:var(--radius);padding:20px 20px 16px;background:var(--carte);border:1px solid #fff;box-shadow:var(--ombre);backdrop-filter:blur(4px);animation:flotte var(--fdur,7s) ease-in-out var(--fdel,0s) infinite}
 .secteur::before{content:"";position:absolute;inset:0;border-radius:var(--radius);background:var(--teinte);opacity:.32;z-index:-1}
 .secteur::after{content:"";position:absolute;inset:0;border-radius:var(--radius);box-shadow:inset 0 0 0 1.5px #ffffffaa;pointer-events:none}
 @keyframes flotte{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-@keyframes orbite{0%{transform:translate(var(--r,44px),0)}25%{transform:translate(0,var(--r,44px))}50%{transform:translate(calc(var(--r,44px)*-1),0)}75%{transform:translate(0,calc(var(--r,44px)*-1))}100%{transform:translate(var(--r,44px),0)}}
-body.paused .orbit{animation-play-state:paused}
 .sec-tete{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;gap:8px}
 .sec-nom{font-family:'Fraunces',serif;font-weight:600;font-size:18px}
 .sec-terr{font-size:11px;color:var(--encre-doux);background:#ffffffcc;border-radius:10px;padding:2px 8px;white-space:nowrap}
@@ -487,9 +485,6 @@ function renderGalaxie(){
   const groupes=buildGroups();
   groupes.forEach((g,i)=>{
     const cell=document.createElement("div");cell.className="orbit";
-    cell.style.setProperty("--r",(40+((i*17)%22))+"px");
-    cell.style.setProperty("--odur",(17+(i%6)*1.7)+"s");
-    cell.style.setProperty("--odel",(-(i*2.6))+"s");
     const el=document.createElement("div");el.className="secteur";
     el.style.setProperty("--teinte",g.teinte);
     el.style.setProperty("--fdur",(6.2+(i%4)*0.8)+"s");el.style.setProperty("--fdel",(-(i*0.9))+"s");
@@ -503,7 +498,33 @@ function renderGalaxie(){
     cell.appendChild(el);host.appendChild(cell);
   });
   renderCritique();
+  startGalaxy();
 }
+/* CONVOI CONTINU : chaque carte glisse en douceur vers la position de la suivante,
+   en parcours serpentin (→ ↓ ← ↓ →…), en boucle, à vitesse lente et constante.
+   Le flottement (bob) reste sur la carte interne. Stop = fige le convoi, garde le bob. */
+let galRAF=null, galPaused=false, galAcc=0, galLast=0, gSlots=[], gSnake=[], gCells=[];
+const PER_SLOT=9000;
+function measureGalaxy(){
+  const host=document.getElementById("galaxie");gCells=[...host.children];
+  gSlots=gCells.map(c=>({x:c.offsetLeft,y:c.offsetTop}));
+  const ys=[...new Set(gSlots.map(s=>Math.round(s.y)))].sort((a,b)=>a-b);
+  gSnake=[];
+  ys.forEach((y,ri)=>{const row=gSlots.map((s,idx)=>({idx,x:s.x})).filter(o=>Math.round(gSlots[o.idx].y)===y).sort((a,b)=>a.x-b.x);
+    if(ri%2)row.reverse();row.forEach(o=>gSnake.push(o.idx));});
+}
+function tickGalaxy(ts){
+  if(!galLast)galLast=ts;galAcc+=(ts-galLast)/PER_SLOT;galLast=ts;
+  const n=gCells.length;
+  if(n>1&&gSnake.length===n){
+    gCells.forEach((cell,i)=>{const p0=gSnake.indexOf(i);const u=p0+galAcc;const k=Math.floor(u),f=u-k;
+      const a=gSlots[gSnake[((k%n)+n)%n]],b=gSlots[gSnake[(((k+1)%n)+n)%n]];
+      cell.style.transform="translate("+(a.x+(b.x-a.x)*f-gSlots[i].x).toFixed(1)+"px,"+(a.y+(b.y-a.y)*f-gSlots[i].y).toFixed(1)+"px)";});
+  }
+  galRAF=requestAnimationFrame(tickGalaxy);
+}
+function startGalaxy(){if(galRAF||galPaused)return;measureGalaxy();galLast=0;galRAF=requestAnimationFrame(tickGalaxy);}
+function stopGalaxy(){if(galRAF){cancelAnimationFrame(galRAF);galRAF=null;}}
 function renderCritique(){
   const host=document.getElementById("cc-line");host.innerHTML="";
   DATA.meta.chemin_critique.forEach((id,i)=>{
@@ -617,6 +638,7 @@ function setVue(i){
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
   document.getElementById("v-"+nom).classList.add("on");
   if(nom==="liste")renderListe();if(nom==="calendrier")renderCalendrier();
+  if(nom==="galaxie")startGalaxy();else stopGalaxy();
 }
 function val(id){return document.getElementById(id).value;}
 
@@ -624,9 +646,10 @@ function wire(){
   document.getElementById("tabs").onclick=e=>{const t=e.target.closest(".tab");if(t)setVue(VUES.indexOf(t.dataset.v));};
   document.getElementById("prev").onclick=()=>setVue(vue-1);
   document.getElementById("next").onclick=()=>setVue(vue+1);
-  document.getElementById("pause").onclick=()=>{const p=document.body.classList.toggle("paused");
-    document.getElementById("pause-ico").textContent=p?"▶":"⏸";
-    document.getElementById("pause-txt").textContent=p?"reprendre":"rotation";};
+  document.getElementById("pause").onclick=()=>{galPaused=!galPaused;
+    if(galPaused)stopGalaxy();else startGalaxy();
+    document.getElementById("pause-ico").textContent=galPaused?"▶":"⏸";
+    document.getElementById("pause-txt").textContent=galPaused?"reprendre":"rotation";};
   document.getElementById("grp").onclick=e=>{const b=e.target.closest("button");if(!b)return;groupBy=b.dataset.g;
     document.querySelectorAll("#grp button").forEach(x=>x.classList.toggle("on",x===b));renderGalaxie();};
   document.getElementById("calmode").onclick=e=>{const b=e.target.closest("button");if(!b)return;calMode=b.dataset.m;
@@ -645,6 +668,7 @@ function wire(){
   let x0=null;const m=document.querySelector(".wrap");
   m.addEventListener("touchstart",e=>x0=e.touches[0].clientX,{passive:true});
   m.addEventListener("touchend",e=>{if(x0===null)return;const dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>70)setVue(dx<0?vue+1:vue-1);x0=null;},{passive:true});
+  let rz;window.addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{if(VUES[vue]==="galaxie"&&!galPaused){stopGalaxy();startGalaxy();}},250);});
 }
 
 renderBandeau();fillFiltres();renderGalaxie();wire();
