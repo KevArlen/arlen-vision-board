@@ -68,12 +68,14 @@ header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px 26px;margin-bot
 .seg{display:inline-flex;background:#fff;border:1px solid var(--bord);border-radius:16px;padding:3px}
 .seg button{border:0;background:transparent;font-family:inherit;font-size:12.5px;color:var(--encre-doux);padding:6px 13px;border-radius:13px;cursor:pointer}
 .seg button.on{background:var(--encre);color:#fff}
-.galaxie{display:grid;grid-template-columns:repeat(auto-fill,minmax(262px,1fr));gap:26px 28px;padding:24px 4px 10px;align-items:start}
-.orbit{transition:transform 1.5s cubic-bezier(.45,0,.2,1);will-change:transform}
+.galaxie{display:grid;grid-template-columns:repeat(auto-fill,minmax(262px,1fr));gap:46px 44px;padding:34px 20px 24px;align-items:start}
+.orbit{animation:orbite var(--odur,20s) ease-in-out var(--odel,0s) infinite;will-change:transform}
 .secteur{position:relative;border-radius:var(--radius);padding:20px 20px 16px;background:var(--carte);border:1px solid #fff;box-shadow:var(--ombre);backdrop-filter:blur(4px);animation:flotte var(--fdur,7s) ease-in-out var(--fdel,0s) infinite}
 .secteur::before{content:"";position:absolute;inset:0;border-radius:var(--radius);background:var(--teinte);opacity:.32;z-index:-1}
 .secteur::after{content:"";position:absolute;inset:0;border-radius:var(--radius);box-shadow:inset 0 0 0 1.5px #ffffffaa;pointer-events:none}
-@keyframes flotte{0%,100%{transform:translateY(0)}50%{transform:translateY(-11px)}}
+@keyframes flotte{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes orbite{0%{transform:translate(var(--r,44px),0)}25%{transform:translate(0,var(--r,44px))}50%{transform:translate(calc(var(--r,44px)*-1),0)}75%{transform:translate(0,calc(var(--r,44px)*-1))}100%{transform:translate(var(--r,44px),0)}}
+body.paused .orbit{animation-play-state:paused}
 .sec-tete{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;gap:8px}
 .sec-nom{font-family:'Fraunces',serif;font-weight:600;font-size:18px}
 .sec-terr{font-size:11px;color:var(--encre-doux);background:#ffffffcc;border-radius:10px;padding:2px 8px;white-space:nowrap}
@@ -469,7 +471,7 @@ function renderBandeau(){
   document.getElementById("pied").textContent="La Galaxie ARLEN · "+DATA.meta.version+" · lecture seule · maintenue au fil de l'eau par Build + Lead (D42).";
 }
 
-let groupBy="territoire", galTimer=null, galPaused=false, galBase=[];
+let groupBy="territoire";
 function buildGroups(){
   if(groupBy==="territoire")
     return DATA.secteurs.map(s=>({id:s.id,nom:s.nom,terr:s.id,teinte:s.teinte,items:DATA.chantiers.filter(c=>c.territoire===s.id)})).filter(g=>g.items.length);
@@ -477,12 +479,17 @@ function buildGroups(){
   const tns=["var(--c-T1)","var(--c-T2)","var(--c-T3)","var(--c-T4)","var(--c-T5)","var(--c-GOV)","var(--c-PROD)","var(--c-GTM)","var(--c-BRAND)","var(--c-JUR)","var(--c-STACK)","var(--c-CONSEIL)"];
   return noms.map((n,i)=>({id:"i"+i,nom:n,terr:"",teinte:tns[i%tns.length],items:DATA.chantiers.filter(c=>c.responsable===n)}));
 }
+/* chaque carte FLOTTE (bob vertical) ET dérive en cercle dans le sens des aiguilles
+   d'une montre (droite→bas→gauche→haut). Phases/rayons variés → mouvement organique,
+   les positions changent en continu. Stop = fige la dérive (le flottement reste). */
 function renderGalaxie(){
-  stopCarousel(false);
   const host=document.getElementById("galaxie");host.innerHTML="";
-  const groupes=buildGroups();galBase=groupes.map(g=>g.id);
+  const groupes=buildGroups();
   groupes.forEach((g,i)=>{
-    const cell=document.createElement("div");cell.className="orbit";cell.dataset.gid=g.id;
+    const cell=document.createElement("div");cell.className="orbit";
+    cell.style.setProperty("--r",(40+((i*17)%22))+"px");
+    cell.style.setProperty("--odur",(17+(i%6)*1.7)+"s");
+    cell.style.setProperty("--odel",(-(i*2.6))+"s");
     const el=document.createElement("div");el.className="secteur";
     el.style.setProperty("--teinte",g.teinte);
     el.style.setProperty("--fdur",(6.2+(i%4)*0.8)+"s");el.style.setProperty("--fdel",(-(i*0.9))+"s");
@@ -496,23 +503,7 @@ function renderGalaxie(){
     cell.appendChild(el);host.appendChild(cell);
   });
   renderCritique();
-  if(VUES[vue]==="galaxie"&&!galPaused)startCarousel();
 }
-/* carrousel : FLIP — chaque cellule glisse vers la position suivante (sens horaire),
-   la dernière revient en tête. Stop = retour à l'ordre d'origine (galBase). */
-function flipGalaxie(newIds){
-  const host=document.getElementById("galaxie");const cells=[...host.children];
-  if(cells.length<2||!cells[0].getBoundingClientRect().width)return;
-  const first=new Map(),byId={};cells.forEach(c=>{first.set(c,c.getBoundingClientRect());byId[c.dataset.gid]=c;});
-  newIds.forEach(id=>{if(byId[id])host.appendChild(byId[id]);});
-  cells.forEach(c=>{const f=first.get(c),l=c.getBoundingClientRect();const dx=f.left-l.left,dy=f.top-l.top;
-    if(dx||dy){c.style.transition="none";c.style.transform="translate("+dx+"px,"+dy+"px)";
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{c.style.transition="";c.style.transform="";}));}});
-}
-function startCarousel(){if(galTimer||galPaused)return;galTimer=setInterval(()=>{
-  const host=document.getElementById("galaxie");const ids=[...host.children].map(c=>c.dataset.gid);
-  if(ids.length<2)return;ids.unshift(ids.pop());flipGalaxie(ids);},4500);}
-function stopCarousel(reset){if(galTimer){clearInterval(galTimer);galTimer=null;}if(reset)flipGalaxie(galBase.slice());}
 function renderCritique(){
   const host=document.getElementById("cc-line");host.innerHTML="";
   DATA.meta.chemin_critique.forEach((id,i)=>{
@@ -626,7 +617,6 @@ function setVue(i){
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
   document.getElementById("v-"+nom).classList.add("on");
   if(nom==="liste")renderListe();if(nom==="calendrier")renderCalendrier();
-  if(nom==="galaxie"&&!galPaused)startCarousel();else stopCarousel(false);
 }
 function val(id){return document.getElementById(id).value;}
 
@@ -634,10 +624,9 @@ function wire(){
   document.getElementById("tabs").onclick=e=>{const t=e.target.closest(".tab");if(t)setVue(VUES.indexOf(t.dataset.v));};
   document.getElementById("prev").onclick=()=>setVue(vue-1);
   document.getElementById("next").onclick=()=>setVue(vue+1);
-  document.getElementById("pause").onclick=()=>{galPaused=!galPaused;
-    if(galPaused)stopCarousel(true);else if(VUES[vue]==="galaxie")startCarousel();
-    document.getElementById("pause-ico").textContent=galPaused?"▶":"⏸";
-    document.getElementById("pause-txt").textContent=galPaused?"reprendre":"rotation";};
+  document.getElementById("pause").onclick=()=>{const p=document.body.classList.toggle("paused");
+    document.getElementById("pause-ico").textContent=p?"▶":"⏸";
+    document.getElementById("pause-txt").textContent=p?"reprendre":"rotation";};
   document.getElementById("grp").onclick=e=>{const b=e.target.closest("button");if(!b)return;groupBy=b.dataset.g;
     document.querySelectorAll("#grp button").forEach(x=>x.classList.toggle("on",x===b));renderGalaxie();};
   document.getElementById("calmode").onclick=e=>{const b=e.target.closest("button");if(!b)return;calMode=b.dataset.m;
