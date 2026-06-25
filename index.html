@@ -504,7 +504,7 @@ function renderGalaxie(){
    en parcours serpentin (→ ↓ ← ↓ →…), en boucle, à vitesse lente et constante.
    Le flottement (bob) reste sur la carte interne. Stop = fige le convoi, garde le bob. */
 let galRAF=null, galPaused=false, galAcc=0, galLast=0, gSlots=[], gSnake=[], gCells=[];
-const PER_SLOT=13000;
+const PER_SLOT=17000;
 function measureGalaxy(){
   const host=document.getElementById("galaxie");gCells=[...host.children];
   gSlots=gCells.map(c=>({x:c.offsetLeft,y:c.offsetTop}));
@@ -523,8 +523,10 @@ function tickGalaxy(ts){
   }
   galRAF=requestAnimationFrame(tickGalaxy);
 }
-function startGalaxy(){if(galRAF||galPaused)return;measureGalaxy();galLast=0;galRAF=requestAnimationFrame(tickGalaxy);}
-function stopGalaxy(){if(galRAF){cancelAnimationFrame(galRAF);galRAF=null;}}
+function startGalaxy(){if(galRAF||galPaused)return;measureGalaxy();gCells.forEach(c=>c.style.transition="");galAcc=0;galLast=0;galRAF=requestAnimationFrame(tickGalaxy);}
+function stopGalaxy(){if(galRAF){cancelAnimationFrame(galRAF);galRAF=null;}galAcc=0;galLast=0;
+  gCells.forEach(c=>{c.style.transition="transform 1.1s cubic-bezier(.4,0,.2,1)";c.style.transform="";});
+  setTimeout(()=>gCells.forEach(c=>{c.style.transition="";}),1200);}
 function renderCritique(){
   const host=document.getElementById("cc-line");host.innerHTML="";
   DATA.meta.chemin_critique.forEach((id,i)=>{
