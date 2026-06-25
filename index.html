@@ -9,117 +9,104 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
 /* ============================================================================
-   LA GALAXIE ARLEN — Vision board / poste de commande · V1 (lecture seule)
-   Direction artistique validée Kevin : objets flottants dans un ciel blanc cassé,
-   pastel apaisé, full motion doux, zéro cliché spatial.
-   Architecture : DONNÉES (objet CHANTIERS, plus bas dans <script>) strictement
-   séparées du RENDU (fonctions render*). Phase 2 = remplacer loadData() par une
-   lecture Notion, sans toucher au rendu.
+   LA GALAXIE ARLEN — Vision board / poste de commande · V2 (lecture seule)
+   DA validée Kevin : objets flottants droits dans un ciel blanc cassé, pastel
+   apaisé, flottaison verticale + rotation orbitale lente (pausable), zéro cliché
+   spatial. DONNÉES (objet CHANTIERS) strictement séparées du RENDU (render*).
+   Phase 2 = remplacer loadData() par une lecture Notion + envoi des commentaires.
    ========================================================================== */
 :root{
-  --ciel:#FBF9F5;            /* fond ciel blanc cassé (jamais blanc pur, jamais sombre) */
-  --encre:#3A3650;           /* texte principal, encre lilas-ardoise douce */
-  --encre-doux:#6E6A82;      /* texte secondaire */
-  --encre-tres-doux:#9C99AC; /* hints */
-  --carte:#FFFFFFEE;         /* surface carte, blanc voilé */
-  --bord:#EBE7F0;            /* bordures très douces */
-  /* couleurs secteurs (pastels validés) */
-  --c-T1:#A7C5EB; --c-T2:#C9BBEC; --c-T3:#AEDCC9; --c-T4:#F2D8A7; --c-T5:#F3B6C9; --c-GOV:#D8D6E0; --c-PROD:#BBD3E8;
-  /* états */
-  --e-encours:#5BA88A; --e-enfile:#E0A94E; --e-bloque:#D8745C; --e-fait:#6E8FC2; --e-reporte:#B4B0BF;
-  --ombre:0 18px 50px -28px rgba(80,70,120,.45);
-  --radius:32px;
+  --ciel:#FBF9F5; --encre:#3A3650; --encre-doux:#6E6A82; --encre-tres-doux:#9C99AC;
+  --carte:#FFFFFFEE; --bord:#EBE7F0;
+  --c-T1:#A7C5EB; --c-T2:#C9BBEC; --c-T3:#AEDCC9; --c-T4:#F2D8A7; --c-T5:#F3B6C9;
+  --c-GOV:#D8D6E0; --c-PROD:#BBD3E8; --c-GTM:#F4C9A8; --c-BRAND:#E9B8DA; --c-JUR:#BFD8C2;
+  --c-STACK:#A9CBD6; --c-CONSEIL:#D6CDB6;
+  --e-encours:#5BA88A; --e-enfile:#E0A94E; --e-bloque:#D8745C; --e-fait:#6E8FC2; --e-reporte:#B4B0BF; --e-dormant:#C9C6D4;
+  --ombre:0 18px 50px -28px rgba(80,70,120,.45); --radius:30px;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
-body{
-  font-family:'Inter',system-ui,sans-serif;
-  color:var(--encre);
-  background:var(--ciel);
-  min-height:100vh;
-  overflow-x:hidden;
-  -webkit-font-smoothing:antialiased;
-}
-/* deux halos pastel diffus : lilas haut-gauche, rosé bas-droite, dérive lente */
-body::before,body::after{content:"";position:fixed;z-index:0;border-radius:50%;filter:blur(70px);pointer-events:none;opacity:.55}
-body::before{width:48vw;height:48vw;left:-10vw;top:-12vw;background:radial-gradient(circle at 50% 50%,#D9CCF2,transparent 70%);animation:drift1 26s ease-in-out infinite}
-body::after{width:46vw;height:46vw;right:-12vw;bottom:-14vw;background:radial-gradient(circle at 50% 50%,#F7CEDC,transparent 70%);animation:drift2 31s ease-in-out infinite}
+body{font-family:'Inter',system-ui,sans-serif;color:var(--encre);background:var(--ciel);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body::before,body::after{content:"";position:fixed;z-index:0;border-radius:50%;filter:blur(80px);pointer-events:none;opacity:.5}
+body::before{width:52vw;height:52vw;left:-12vw;top:-14vw;background:radial-gradient(circle,#D9CCF2,transparent 70%);animation:drift1 28s ease-in-out infinite}
+body::after{width:50vw;height:50vw;right:-14vw;bottom:-16vw;background:radial-gradient(circle,#F7CEDC,transparent 70%);animation:drift2 33s ease-in-out infinite}
 @keyframes drift1{0%,100%{transform:translate(0,0)}50%{transform:translate(4vw,3vh)}}
 @keyframes drift2{0%,100%{transform:translate(0,0)}50%{transform:translate(-3vw,-3vh)}}
+.wrap{position:relative;z-index:1;max-width:1480px;margin:0 auto;padding:24px 30px 90px}
 
-.wrap{position:relative;z-index:1;max-width:1160px;margin:0 auto;padding:26px 22px 80px}
-
-/* ---- en-tête / bandeau de pilotage ---- */
-header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px 26px;margin-bottom:8px}
-.titre h1{font-family:'Fraunces',serif;font-weight:500;font-size:30px;margin:0;letter-spacing:.2px}
+/* ---- bandeau de pilotage ---- */
+header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px 26px;margin-bottom:8px}
+.titre h1{font-family:'Fraunces',serif;font-weight:500;font-size:30px;margin:0}
 .titre p{margin:3px 0 0;color:var(--encre-doux);font-size:14px}
-.cap{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--bord);border-radius:30px;padding:7px 15px;font-size:13.5px;box-shadow:var(--ombre)}
+.cap{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--bord);border-radius:26px;padding:8px 16px;font-size:13.5px;box-shadow:var(--ombre);max-width:520px}
 .cap b{font-weight:600}
-.cap .fleche{color:var(--c-T5)}
-.stats{display:flex;gap:10px;margin-left:auto}
+.stats{display:flex;gap:9px;margin-left:auto;flex-wrap:wrap}
 .pill{display:inline-flex;align-items:center;gap:7px;border-radius:18px;padding:6px 13px;font-size:12.5px;font-weight:500;border:1px solid var(--bord);background:#fff;cursor:pointer;transition:transform .2s,box-shadow .2s}
 .pill:hover{transform:translateY(-2px);box-shadow:var(--ombre)}
 .pill .dot{width:8px;height:8px;border-radius:50%}
-.pill.b{color:#9a4e3a}.pill.b .dot{background:var(--e-bloque)}
-.pill.k{color:#8a6420}.pill.k .dot{background:var(--e-enfile)}
-.frais{font-size:12px;color:var(--encre-tres-doux);align-self:center}
+.pill.c .dot{background:var(--e-encours)} .pill.c{color:#3e7e63}
+.pill.b .dot{background:var(--e-bloque)} .pill.b{color:#9a4e3a}
+.pill.k .dot{background:var(--e-enfile)} .pill.k{color:#8a6420}
+.frais{font-size:12px;color:var(--encre-tres-doux);margin-top:4px}
 
-/* ---- onglets de vue + flèches de swipe ---- */
-.nav{display:flex;align-items:center;gap:8px;margin:18px 0 22px}
+/* ---- onglets + flèches + bouton pause ---- */
+.nav{display:flex;align-items:center;gap:8px;margin:18px 0 14px;flex-wrap:wrap}
 .tabs{display:flex;gap:4px;background:#fff;border:1px solid var(--bord);border-radius:22px;padding:4px;box-shadow:var(--ombre)}
-.tab{border:0;background:transparent;font-family:inherit;font-size:14px;color:var(--encre-doux);padding:8px 18px;border-radius:18px;cursor:pointer;transition:all .25s;display:inline-flex;align-items:center;gap:7px}
+.tab{border:0;background:transparent;font-family:inherit;font-size:14px;color:var(--encre-doux);padding:8px 18px;border-radius:18px;cursor:pointer;transition:all .25s}
 .tab.on{background:var(--encre);color:#fff}
-.arw{margin-left:auto;display:flex;gap:6px}
-.arw button{width:38px;height:38px;border-radius:50%;border:1px solid var(--bord);background:#fff;cursor:pointer;font-size:17px;color:var(--encre-doux);transition:transform .2s,box-shadow .2s}
-.arw button:hover{transform:translateY(-2px);box-shadow:var(--ombre)}
+.tools{margin-left:auto;display:flex;gap:6px;align-items:center}
+.tools button{height:38px;border-radius:19px;border:1px solid var(--bord);background:#fff;cursor:pointer;font-size:13px;color:var(--encre-doux);padding:0 14px;transition:transform .2s,box-shadow .2s;display:inline-flex;align-items:center;gap:6px}
+.tools button:hover{transform:translateY(-2px);box-shadow:var(--ombre)}
+.tools .ico{width:38px;padding:0;justify-content:center;font-size:17px}
 
 .view{display:none;animation:fadein .5s ease}
 .view.on{display:block}
 @keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
-/* ---- vue galaxie : objets flottants ---- */
-.galtoolbar{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+/* ---- vue galaxie : objets flottants droits, orbite lente pausable ---- */
+.galtoolbar{display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap}
 .seg{display:inline-flex;background:#fff;border:1px solid var(--bord);border-radius:16px;padding:3px}
 .seg button{border:0;background:transparent;font-family:inherit;font-size:12.5px;color:var(--encre-doux);padding:6px 13px;border-radius:13px;cursor:pointer}
 .seg button.on{background:var(--encre);color:#fff}
-.galaxie{display:flex;flex-wrap:wrap;justify-content:center;gap:30px 38px;padding:26px 4px 10px}
-.secteur{position:relative;width:248px;border-radius:var(--radius);padding:18px 18px 14px;background:var(--carte);border:1px solid #fff;box-shadow:var(--ombre);backdrop-filter:blur(4px);animation:flotte var(--dur,7s) ease-in-out var(--del,0s) infinite}
-.secteur::before{content:"";position:absolute;inset:0;border-radius:var(--radius);background:var(--teinte);opacity:.34;z-index:-1}
+.galaxie{display:flex;flex-wrap:wrap;justify-content:center;gap:42px 56px;padding:34px 6px 10px}
+.orbit{animation:orbite var(--odur,60s) ease-in-out var(--odel,0s) infinite}
+.secteur{position:relative;width:300px;border-radius:var(--radius);padding:20px 20px 16px;background:var(--carte);border:1px solid #fff;box-shadow:var(--ombre);backdrop-filter:blur(4px);animation:flotte var(--fdur,7s) ease-in-out var(--fdel,0s) infinite}
+.secteur::before{content:"";position:absolute;inset:0;border-radius:var(--radius);background:var(--teinte);opacity:.32;z-index:-1}
 .secteur::after{content:"";position:absolute;inset:0;border-radius:var(--radius);box-shadow:inset 0 0 0 1.5px #ffffffaa;pointer-events:none}
-/* tailles & décalages variables → moins aligné, plus d'air */
-.secteur:nth-child(3n+1){width:266px;margin-top:0}
-.secteur:nth-child(3n+2){width:236px;margin-top:40px}
-.secteur:nth-child(3n+3){width:256px;margin-top:16px}
-.secteur:nth-child(4n+2){transform:rotate(-1.2deg)}
-.secteur:nth-child(4n){transform:rotate(1deg)}
-@keyframes flotte{0%,100%{translate:0 0}50%{translate:0 -14px}}
-.sec-tete{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
-.sec-nom{font-family:'Fraunces',serif;font-weight:600;font-size:17px}
-.sec-terr{font-size:11px;color:var(--encre-doux);background:#ffffffcc;border-radius:10px;padding:2px 8px}
-.sec-insts{font-size:11.5px;color:var(--encre-doux);margin:0 0 10px}
+.secteur:nth-child(3n+1){width:312px} .secteur:nth-child(3n+2){width:286px} .secteur:nth-child(3n+3){width:300px}
+@keyframes flotte{0%,100%{transform:translateY(0)}50%{transform:translateY(-13px)}}
+@keyframes orbite{0%,100%{translate:0 0}25%{translate:14px -10px}50%{translate:-8px 8px}75%{translate:-14px -6px}}
+body.paused .orbit,body.paused .secteur,body.paused::before,body.paused::after{animation-play-state:paused}
+.sec-tete{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;gap:8px}
+.sec-nom{font-family:'Fraunces',serif;font-weight:600;font-size:18px}
+.sec-terr{font-size:11px;color:var(--encre-doux);background:#ffffffcc;border-radius:10px;padding:2px 8px;white-space:nowrap}
+.sec-insts{font-size:11.5px;color:var(--encre-doux);margin:0 0 11px}
 .chips{display:flex;flex-direction:column;gap:6px}
-.chip{display:flex;align-items:center;gap:9px;background:#ffffffe0;border:1px solid #ffffff;border-radius:15px;padding:7px 11px;cursor:pointer;font-size:12.5px;transition:transform .18s,box-shadow .18s;text-align:left;width:100%}
+.chip{display:flex;align-items:center;gap:9px;background:#ffffffe6;border:1px solid #fff;border-radius:15px;padding:8px 11px;cursor:pointer;font-size:12.5px;transition:transform .18s,box-shadow .18s;text-align:left;width:100%}
 .chip:hover{transform:translateX(3px);box-shadow:0 8px 22px -16px rgba(80,70,120,.6)}
 .chip .edot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
 .chip .ctitre{flex:1;line-height:1.25}
-.chip .cstar{font-size:11px;opacity:.85}
 .edot.s-en_cours{background:var(--e-encours)} .edot.s-en_file{background:var(--e-enfile)}
 .edot.s-bloque{background:var(--e-bloque);animation:battement 1.8s ease-in-out infinite}
-.edot.s-fait{background:var(--e-fait)} .edot.s-reporte{background:var(--e-reporte)}
+.edot.s-fait{background:var(--e-fait)} .edot.s-reporte{background:var(--e-reporte)} .edot.s-dormant{background:var(--e-dormant)}
+body.paused .edot.s-bloque{animation-play-state:paused}
 @keyframes battement{0%,100%{box-shadow:0 0 0 0 rgba(216,116,92,.55)}50%{box-shadow:0 0 0 5px rgba(216,116,92,0)}}
 
-/* ---- chemin critique : ruban à flux lumineux ---- */
-.critique{margin:30px auto 0;max-width:980px;background:var(--carte);border:1px solid #fff;border-radius:26px;box-shadow:var(--ombre);padding:16px 20px 20px}
+/* ---- chemin critique : étages nommés + flux ---- */
+.critique{margin:34px auto 0;max-width:1120px;background:var(--carte);border:1px solid #fff;border-radius:26px;box-shadow:var(--ombre);padding:16px 22px 20px}
 .critique h3{font-family:'Fraunces',serif;font-weight:500;font-size:15px;margin:0 0 2px;display:flex;align-items:center;gap:8px}
 .critique .sub{font-size:11.5px;color:var(--encre-doux);margin:0 0 6px}
-.cc-line{position:relative;display:flex;align-items:center;gap:6px;overflow-x:auto;padding:10px 2px 4px}
-.cc-node{flex:0 0 auto;max-width:150px;background:#fff;border:1px solid var(--bord);border-radius:18px;padding:9px 13px;cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative}
+.cc-line{position:relative;display:flex;align-items:stretch;gap:6px;overflow-x:auto;padding:10px 2px 4px}
+.cc-node{flex:0 0 auto;max-width:160px;background:#fff;border:1px solid var(--bord);border-radius:18px;padding:9px 13px;cursor:pointer;transition:transform .2s,box-shadow .2s}
 .cc-node:hover{transform:translateY(-3px);box-shadow:var(--ombre)}
-.cc-node .t{font-size:12px;font-weight:500;line-height:1.2}
-.cc-node .e{font-size:10.5px;color:var(--encre-doux);margin-top:2px;display:flex;align-items:center;gap:5px}
+.cc-node .et{font-size:10px;font-weight:600;color:var(--encre-tres-doux);text-transform:uppercase;letter-spacing:.4px}
+.cc-node .t{font-size:12px;font-weight:500;line-height:1.2;margin-top:1px}
+.cc-node .e{font-size:10.5px;color:var(--encre-doux);margin-top:3px;display:flex;align-items:center;gap:5px}
 .cc-node.goulot{border-color:var(--e-encours);animation:pulseGoulot 2.2s ease-in-out infinite}
+body.paused .cc-node.goulot{animation-play-state:paused}
 @keyframes pulseGoulot{0%,100%{box-shadow:0 0 0 0 rgba(91,168,138,.5)}50%{box-shadow:0 0 0 8px rgba(91,168,138,0)}}
-.cc-flux{flex:0 0 30px;height:3px;border-radius:3px;background:linear-gradient(90deg,#E6DEF5,#CFE3D8,#E6DEF5);background-size:200% 100%;animation:flux 2.4s linear infinite;align-self:center}
+.cc-flux{flex:0 0 26px;height:3px;border-radius:3px;background:linear-gradient(90deg,#E6DEF5,#CFE3D8,#E6DEF5);background-size:200% 100%;animation:flux 2.4s linear infinite;align-self:center}
+body.paused .cc-flux{animation-play-state:paused}
 @keyframes flux{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .cc-node.cap{background:linear-gradient(180deg,#fff,#FBEFF3);border-color:var(--c-T5)}
 
@@ -129,41 +116,56 @@ header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px 26px;margin-bot
 .filtres label{font-size:11.5px;color:var(--encre-tres-doux);margin-right:-4px}
 .compte{margin-left:auto;font-size:12.5px;color:var(--encre-doux)}
 .liste{display:flex;flex-direction:column;gap:8px}
-.ligne{display:grid;grid-template-columns:14px 1.7fr .8fr .9fr .8fr;gap:14px;align-items:center;background:var(--carte);border:1px solid #fff;border-radius:18px;padding:13px 18px;cursor:pointer;box-shadow:0 10px 30px -26px rgba(80,70,120,.6);transition:transform .18s,box-shadow .18s}
+.ligne{display:grid;grid-template-columns:14px 2fr .8fr .9fr .9fr;gap:14px;align-items:center;background:var(--carte);border:1px solid #fff;border-radius:18px;padding:13px 18px;cursor:pointer;box-shadow:0 10px 30px -26px rgba(80,70,120,.6);transition:transform .18s,box-shadow .18s}
 .ligne:hover{transform:translateY(-2px);box-shadow:var(--ombre)}
 .ligne .lt{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px}
 .ligne .meta{font-size:12px;color:var(--encre-doux)}
 .ligne .etat-tag{font-size:11.5px;font-weight:500;padding:3px 11px;border-radius:12px;justify-self:start}
+.ligne .fait-date{font-size:11.5px;color:var(--e-fait);font-weight:500}
 .barre{width:10px;height:10px;border-radius:50%}
-@media(max-width:720px){.ligne{grid-template-columns:12px 1fr;gap:8px}.ligne .meta,.ligne .etat-tag{display:none}}
+@media(max-width:760px){.ligne{grid-template-columns:12px 1fr}.ligne .meta,.ligne .etat-tag,.ligne .fait-date{display:none}}
 
 /* ---- vue calendrier ---- */
 .calbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
 .cal{display:flex;gap:16px;overflow-x:auto;padding-bottom:10px}
-.calcol{flex:0 0 200px;min-width:200px}
-.calcol .jour{font-family:'Fraunces',serif;font-size:14px;font-weight:500;color:var(--encre);padding:6px 4px;border-bottom:2px solid var(--bord);margin-bottom:10px;position:sticky;top:0}
+.calcol{flex:0 0 210px;min-width:210px}
+.calcol .jour{font-family:'Fraunces',serif;font-size:14px;font-weight:500;padding:6px 4px;border-bottom:2px solid var(--bord);margin-bottom:10px}
 .calcard{background:var(--carte);border:1px solid #fff;border-radius:16px;padding:11px 13px;margin-bottom:9px;cursor:pointer;box-shadow:0 10px 26px -24px rgba(80,70,120,.6);transition:transform .18s,box-shadow .18s}
 .calcard:hover{transform:translateY(-2px);box-shadow:var(--ombre)}
 .calcard .ct{font-size:12.5px;font-weight:500;display:flex;gap:7px;align-items:flex-start;line-height:1.3}
 .calcard .cm{font-size:11px;color:var(--encre-doux);margin-top:4px}
 
-/* ---- carte de détail (overlay) ---- */
-.scrim{position:fixed;inset:0;z-index:50;background:rgba(58,54,80,.28);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:22px;opacity:0;pointer-events:none;transition:opacity .3s}
+/* ---- carte de détail riche ---- */
+.scrim{position:fixed;inset:0;z-index:50;background:rgba(58,54,80,.30);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:22px;opacity:0;pointer-events:none;transition:opacity .3s;overflow-y:auto}
 .scrim.on{opacity:1;pointer-events:auto}
-.detail{width:420px;max-width:100%;background:#fff;border-radius:26px;box-shadow:0 40px 90px -30px rgba(58,54,80,.6);padding:24px 26px;transform:scale(.9) translateY(14px);opacity:0;transition:transform .32s cubic-bezier(.2,.9,.3,1.2),opacity .3s}
+.detail{width:560px;max-width:100%;background:#fff;border-radius:28px;box-shadow:0 40px 90px -30px rgba(58,54,80,.6);padding:26px 30px;transform:scale(.92) translateY(14px);opacity:0;transition:transform .32s cubic-bezier(.2,.9,.3,1.2),opacity .3s;margin:auto}
 .scrim.on .detail{transform:none;opacity:1}
 .detail .dtete{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
-.detail h2{font-family:'Fraunces',serif;font-weight:500;font-size:20px;margin:0;line-height:1.25}
+.detail h2{font-family:'Fraunces',serif;font-weight:500;font-size:22px;margin:0;line-height:1.22}
 .detail .fermer{flex:0 0 auto;width:34px;height:34px;border-radius:50%;border:1px solid var(--bord);background:#fff;cursor:pointer;font-size:17px;color:var(--encre-doux)}
 .detail .dtags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
 .dtag{font-size:11.5px;font-weight:500;padding:3px 11px;border-radius:12px}
-.detail table{width:100%;border-collapse:collapse}
-.detail td{padding:7px 0;font-size:13.5px;border-top:1px solid var(--bord)}
-.detail td.k{color:var(--encre-doux);width:42%}
-.detail td.v{text-align:right;font-weight:500}
-.detail .note{margin-top:14px;background:#FBF9F5;border-radius:14px;padding:12px 14px;font-size:13px;color:var(--encre-doux);line-height:1.55}
-.detail .hist{margin-top:12px;font-size:11.5px;color:var(--encre-tres-doux)}
+.detail .resume{width:100%;border-collapse:collapse;margin-bottom:4px}
+.detail .resume td{padding:7px 0;font-size:13.5px;border-top:1px solid var(--bord)}
+.detail .resume td.k{color:var(--encre-doux);width:40%}
+.detail .resume td.v{text-align:right;font-weight:500}
 .detail .canal{color:var(--e-fait);font-weight:500}
+.recit{margin-top:16px}
+.recit .quoi{font-size:14px;line-height:1.6;color:var(--encre);background:#FBF9F5;border-radius:16px;padding:14px 16px}
+.etape{display:flex;gap:12px;margin-top:14px}
+.etape .marq{flex:0 0 auto;width:30px;text-align:center}
+.etape .marq .pt{width:11px;height:11px;border-radius:50%;margin:4px auto 0}
+.etape .marq .bar{width:2px;height:calc(100% - 8px);background:var(--bord);margin:2px auto 0}
+.etape .corps .lab{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--encre-tres-doux)}
+.etape .corps .txt{font-size:13.5px;line-height:1.55;color:var(--encre-doux);margin-top:2px}
+.etape.av .pt{background:var(--e-reporte)} .etape.mt .pt{background:var(--e-encours)} .etape.ap .pt{background:var(--e-enfile)}
+.etape.mt .txt{color:var(--encre);font-weight:500}
+.commentaire{margin-top:18px;border-top:1px solid var(--bord);padding-top:14px}
+.commentaire .lab{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--encre-tres-doux);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.commentaire textarea{width:100%;min-height:64px;border:1px solid var(--bord);border-radius:14px;padding:10px 12px;font-family:inherit;font-size:13px;color:var(--encre);resize:vertical;background:#FBF9F5}
+.commentaire .row{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.commentaire .ph{font-size:11px;color:var(--encre-tres-doux)}
+.commentaire button{border:1px solid var(--bord);background:#fff;border-radius:13px;padding:7px 14px;font-family:inherit;font-size:12.5px;color:var(--encre-doux);cursor:pointer}
 
 .legende{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-top:26px;font-size:11.5px;color:var(--encre-doux)}
 .legende span{display:inline-flex;align-items:center;gap:6px}
@@ -180,10 +182,11 @@ header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px 26px;margin-bot
       <h1>La Galaxie ARLEN</h1>
       <p>Poste de commande — où on est · où on va · qui fait quoi</p>
     </div>
-    <div class="cap">Cap&nbsp;: <b>PME&nbsp;T0</b> <span class="fleche">→</span> <b>ASR</b></div>
+    <div class="cap" id="cap"></div>
     <div class="stats">
-      <button class="pill b" id="pill-bloc"><span class="dot"></span><span id="n-bloc">0</span> bloqués</button>
+      <button class="pill c" id="pill-cours"><span class="dot"></span><span id="n-cours">0</span> en cours</button>
       <button class="pill k" id="pill-file"><span class="dot"></span><span id="n-file">0</span> en file</button>
+      <button class="pill b" id="pill-bloc"><span class="dot"></span><span id="n-bloc">0</span> bloqués</button>
     </div>
   </header>
   <div class="frais" id="frais"></div>
@@ -194,34 +197,40 @@ header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px 26px;margin-bot
       <button class="tab" data-v="liste">☰ Liste</button>
       <button class="tab" data-v="calendrier">◷ Calendrier</button>
     </div>
-    <div class="arw"><button id="prev" aria-label="vue précédente">‹</button><button id="next" aria-label="vue suivante">›</button></div>
+    <div class="tools">
+      <button id="pause"><span id="pause-ico">⏸</span> <span id="pause-txt">rotation</span></button>
+      <button class="ico" id="prev" aria-label="vue précédente">‹</button>
+      <button class="ico" id="next" aria-label="vue suivante">›</button>
+    </div>
   </div>
 
-  <!-- ===================== VUE GALAXIE ===================== -->
   <section class="view on" id="v-galaxie">
     <div class="galtoolbar">
-      <div class="seg" id="grp">
-        <button class="on" data-g="territoire">par territoire</button>
-        <button data-g="instance">par instance</button>
-      </div>
+      <div class="seg" id="grp"><button class="on" data-g="territoire">par territoire</button><button data-g="instance">par instance</button></div>
     </div>
     <div class="galaxie" id="galaxie"></div>
-
     <div class="critique">
-      <h3>🎯&nbsp;Le chemin critique vers l'ASR</h3>
-      <p class="sub">Kata → Engine → Engine → ASR. Tout le reste tourne en parallèle.</p>
+      <h3>🎯&nbsp;Le chemin critique — étage par étage vers les ASR</h3>
+      <p class="sub">Chaque jalon = un étage de la chaîne. Tout le reste tourne en parallèle.</p>
       <div class="cc-line" id="cc-line"></div>
     </div>
   </section>
 
-  <!-- ===================== VUE LISTE ===================== -->
   <section class="view" id="v-liste">
     <div class="filtres">
       <label>instance</label><select id="f-inst"></select>
       <label>état</label><select id="f-etat"></select>
       <label>territoire</label><select id="f-terr"></select>
+      <label>complété</label><select id="f-comp">
+        <option value="">à tout moment</option>
+        <option value="hier">terminé hier</option>
+        <option value="semaine">cette semaine</option>
+        <option value="dernsem">semaine dernière</option>
+        <option value="2sem">il y a 2 semaines</option>
+      </select>
       <label>tri</label><select id="f-tri">
         <option value="action">date d'action ↓</option>
+        <option value="completion">date de complétion ↓</option>
         <option value="cible">date-cible ↑</option>
         <option value="titre">titre A→Z</option>
         <option value="etat">état</option>
@@ -231,11 +240,11 @@ header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px 26px;margin-bot
     <div class="liste" id="liste"></div>
   </section>
 
-  <!-- ===================== VUE CALENDRIER ===================== -->
   <section class="view" id="v-calendrier">
     <div class="calbar">
       <div class="seg" id="calmode">
-        <button class="on" data-m="action">par date d'action</button>
+        <button class="on" data-m="realise">ce qui s'est passé</button>
+        <button data-m="action">par date d'action</button>
         <button data-m="cible">par date-cible</button>
       </div>
       <span class="compte" id="cal-compte"></span>
@@ -244,156 +253,219 @@ header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px 26px;margin-bot
   </section>
 
   <div class="legende">
-    <span><i style="background:var(--e-en_cours,#5BA88A)"></i>en cours</span>
+    <span><i style="background:#5BA88A"></i>en cours</span>
     <span><i style="background:#E0A94E"></i>en file</span>
     <span><i style="background:#D8745C"></i>bloqué</span>
     <span><i style="background:#6E8FC2"></i>fait</span>
     <span><i style="background:#B4B0BF"></i>reporté</span>
-    <span>🎯 sur le chemin critique</span>
+    <span><i style="background:#C9C6D4"></i>dormant</span>
+    <span>🎯 chemin critique</span>
   </div>
   <div class="pied" id="pied"></div>
-
 </div>
 
 <div class="scrim" id="scrim"><div class="detail" id="detail" role="dialog" aria-modal="true"></div></div>
 
 <script>
 /* ============================================================================
-   ░░  DONNÉES  ░░  — source unique, éditée à la main par Build + Lead au fil de
-   l'eau (D42), jusqu'à la phase 2 (synchro Notion). Reprend les 19 chantiers de
-   la Galaxie Notion 3893cd9c-8f8f-8154-b7ec-fe40f0cf8091.
-   Schéma d'un chantier (propre & extensible — la phase 2 remplira la même forme) :
-     id            identifiant stable (slug)
-     titre         libellé
-     territoire    T1 | T2 | T3 | T4 | T5 | GOV | PROD
-     etage         "1".."5" ou "—"  (D23 : 1 clés · 2 Table · 3 mapping · 4 config · 5 moteur)
-     responsable   instance qui porte
-     verifie       instance qui vérifie (D15)
-     securise      instance qui sécurise, ou "—"
-     etat          en_cours | en_file | bloque | fait | reporte
-     critique      true = sur le chemin critique 🎯
-     goulot        true = nœud-goulot actuel (pulse sur le chemin critique)
-     date_action   AAAA-MM-JJ — dernière action (placeholder éditable)
-     date_cible    AAAA-MM-JJ | null — échéance visée (placeholder éditable)
-     note          contexte court
-     canal         canal Slack du chantier
+   ░░  DONNÉES  ░░  — source unique, éditée à la main par Build + Lead (D42),
+   jusqu'à la phase 2 (synchro Notion). Chaque chantier en mots simples.
+   Champs : id · titre · territoire · etage · responsable · verifie · securise
+     · etat (en_cours|en_file|bloque|fait|reporte|dormant) · critique · goulot
+     · date_action · date_cible · date_completion (si fait) · canal
+     · quoi (ce que c'est, simple) · avant · maintenant · apres · note
+   NB V2 : le grand tour des instances (tous territoires) enrichit cette liste
+   au fil de l'eau — c'est le CONTENU ; le rendu ci-dessous ne change pas.
    ========================================================================== */
 
 const META = {
-  version: "V1",
-  updated_at: "2026-06-25",
-  cap: "PME T0 → ASR",
-  /* ordre du chemin critique (ids), colonne vertébrale vers l'ASR */
-  chemin_critique: ["etage1","reserialisation","resync_table","compositions","t1b","t2_moteur","asr"]
+  version:"V2", updated_at:"2026-06-25", today:"2026-06-25",
+  cap:"On monte étage par étage sur tous les protocoles — PME · IND · TPE · pré-relevé · signal · thématiques.",
+  chemin_critique:["etage1","reserialisation","resync_table","t1b","t2_moteur","asr"]
 };
 
-/* 7 territoires (secteurs flottants) + leur teinte pastel */
+/* territoires (secteurs) + teinte — extensible : ajouter une entrée suffit */
 const SECTEURS = [
-  {id:"T1",  nom:"Core",       teinte:"var(--c-T1)"},
-  {id:"T2",  nom:"Moteur",     teinte:"var(--c-T2)"},
-  {id:"T3",  nom:"Capture",    teinte:"var(--c-T3)"},
-  {id:"T4",  nom:"Protéger",   teinte:"var(--c-T4)"},
-  {id:"T5",  nom:"Sécurité",   teinte:"var(--c-T5)"},
-  {id:"GOV", nom:"Gouvernance",teinte:"var(--c-GOV)"},
-  {id:"PROD",nom:"Production",  teinte:"var(--c-PROD)"}
+  {id:"T1",nom:"Core",teinte:"var(--c-T1)"},
+  {id:"T2",nom:"Moteur",teinte:"var(--c-T2)"},
+  {id:"T3",nom:"Capture",teinte:"var(--c-T3)"},
+  {id:"T4",nom:"Protéger",teinte:"var(--c-T4)"},
+  {id:"T5",nom:"Sécurité",teinte:"var(--c-T5)"},
+  {id:"GOV",nom:"Gouvernance",teinte:"var(--c-GOV)"},
+  {id:"PROD",nom:"Production",teinte:"var(--c-PROD)"},
+  {id:"GTM",nom:"Marché & GTM",teinte:"var(--c-GTM)"},
+  {id:"BRAND",nom:"Site & Brand",teinte:"var(--c-BRAND)"},
+  {id:"JUR",nom:"Juridique",teinte:"var(--c-JUR)"},
+  {id:"STACK",nom:"Stack & Infra",teinte:"var(--c-STACK)"},
+  {id:"CONSEIL",nom:"Conseil",teinte:"var(--c-CONSEIL)"}
 ];
 
 const CHANTIERS = [
-  {id:"etage1", titre:"Étage 1 — hub clés tous-profils", territoire:"T1", etage:"1", responsable:"Kata", verifie:"Engine", securise:"—", etat:"fait", critique:true, goulot:false, date_action:"2026-06-24", date_cible:null, note:"Complet + D40 appliqué + re-sérialisé (107 entrées).", canal:"#thème-data"},
-  {id:"reserialisation", titre:"Re-sérialisation hub post-D40", territoire:"T1", etage:"1→2", responsable:"Engine", verifie:"align_check", securise:"—", etat:"en_cours", critique:true, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-25", note:"Mergé (5b3e08d), INV3 vert. Gate A franchi 3✅.", canal:"#arl-engine"},
-  {id:"resync_table", titre:"Resync Table N1 (O3)", territoire:"T2", etage:"2", responsable:"Kata", verifie:"Engine", securise:"—", etat:"en_cours", critique:true, goulot:true, date_action:"2026-06-25", date_cible:"2026-06-27", note:"Étage 2 lancé — grammaire/poids/polarité. LE goulot : débloque T1.b.", canal:"#thème-data"},
-  {id:"compositions", titre:"Compositions par profil + keys_index", territoire:"T2", etage:"2", responsable:"Kata", verifie:"Engine", securise:"—", etat:"en_cours", critique:true, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-27", note:"Passe INV2-scope / INV4 au vert.", canal:"#thème-data"},
-  {id:"t1b", titre:"T1.b — dérivation Registry→scoring_config", territoire:"T1", etage:"4", responsable:"Engine", verifie:"Verif", securise:"Sec", etat:"en_file", critique:true, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-29", note:"Attend l'étage 2. Active align_check bloquant → boucle T1.", canal:"#arl-engine"},
-  {id:"t2_moteur", titre:"T2 — recâblage moteur (theme_id)", territoire:"T2", etage:"5", responsable:"Engine", verifie:"Verif", securise:"Sec", etat:"bloque", critique:true, goulot:false, date_action:"2026-06-24", date_cible:"2026-07-02", note:"Bloqué par T1 (D2). Le chantier qui produit l'ASR.", canal:"#arl-engine"},
-  {id:"asr", titre:"ASR PME T0 bout-en-bout", territoire:"T2", etage:"5", responsable:"Engine", verifie:"Verif", securise:"Sec", etat:"bloque", critique:true, goulot:false, date_action:"2026-06-24", date_cible:"2026-07-04", note:"LE CAP (D8).", canal:"#arl-engine"},
-  {id:"refresh_gov", titre:"Refresh GOV-000à009", territoire:"GOV", etage:"—", responsable:"Build", verifie:"Lead", securise:"—", etat:"en_cours", critique:false, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-30", note:"Phase A gap-analysis livrée (6 HAUTES). Phase B drafts attend GO.", canal:"#arl-build"},
-  {id:"rangement_gov", titre:"Rangement dossier gouvernance", territoire:"GOV", etage:"—", responsable:"Lilla", verifie:"Lead", securise:"—", etat:"en_cours", critique:false, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-28", note:"Phase B en exécution.", canal:"#arl-build"},
-  {id:"tour_instances", titre:"Tour des instances de coding", territoire:"GOV", etage:"—", responsable:"Build", verifie:"Lead", securise:"—", etat:"en_cours", critique:false, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-25", note:"Synthèse des 7 remontée à Lead.", canal:"#arl-build"},
-  {id:"sec_durcissements", titre:"Durcissements SEC-T01/02/03", territoire:"T5", etage:"—", responsable:"Sec", verifie:"—", securise:"Sec", etat:"en_file", critique:false, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-26", note:".dockerignore (re-fix **/.env*) + provisioning backup.", canal:"#arl-sec"},
-  {id:"backup_daily", titre:"Auto-backup quotidien", territoire:"T4", etage:"—", responsable:"Keeper", verifie:"Sec", securise:"Sec", etat:"en_file", critique:false, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-27", note:"Scope workflow OK (D32). Attend GO Sec bypassrls.", canal:"#arl-keeper"},
-  {id:"audit_alignblock", titre:"Audit gate align_check bloquant", territoire:"T5", etage:"—", responsable:"Verif", verifie:"—", securise:"Sec", etat:"en_file", critique:false, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-29", note:"À préparer pour T1.b (D15). Harnais mutation-testing prêt.", canal:"#arl-verif"},
-  {id:"file_merges", titre:"File de merges Ops", territoire:"PROD", etage:"—", responsable:"Ops", verifie:"—", securise:"Sec", etat:"en_file", critique:false, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-26", note:"Gate A mergé. Reste re-gate SEC-T01 + backup-daily.", canal:"#arl-ops"},
-  {id:"mise_en_ligne", titre:"Mise en ligne protocoles N1 + passage N2", territoire:"PROD", etage:"—", responsable:"Platform", verifie:"Verif", securise:"—", etat:"bloque", critique:false, goulot:false, date_action:"2026-06-24", date_cible:"2026-07-05", note:"ANGLE MORT — versions figées pas en prod ; routages/UI-UX (N2) pilotés par personne.", canal:"#arl-platform"},
-  {id:"capture_thematique", titre:"Capture thématique", territoire:"T3", etage:"—", responsable:"Platform", verifie:"Verif", securise:"—", etat:"reporte", critique:false, goulot:false, date_action:"2026-06-23", date_cible:null, note:"Track indépendant (D6), après l'ASR socle.", canal:"#arl-platform"},
-  {id:"pb5_l3", titre:"PB-5 — palier L3 Access_Mode", territoire:"T2", etage:"—", responsable:"Mika Ops / Engine", verifie:"—", securise:"—", etat:"en_file", critique:false, goulot:false, date_action:"2026-06-24", date_cible:null, note:"Hors hub, côté code. Dev déjà tranché (17 juin), à séquencer.", canal:"#arl-ops"},
-  {id:"vig1", titre:"VIG-1 — Headcount_Bracket câblage", territoire:"T1", etage:"5", responsable:"Engine", verifie:"—", securise:"—", etat:"en_file", critique:true, goulot:false, date_action:"2026-06-24", date_cible:"2026-06-29", note:"Vérif au câblage T1.b/T2 : chercher la variable depuis le pré-relevé.", canal:"#arl-engine"},
-  {id:"galaxie", titre:"Galaxie / poste de commande", territoire:"GOV", etage:"—", responsable:"Lead + Build", verifie:"—", securise:"—", etat:"en_cours", critique:false, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-25", note:"Cette vue — maintenue au fil de l'eau (D42).", canal:"#arl-build"}
+  {id:"etage1",titre:"Étage 1 — clés de toutes les variables",territoire:"T1",etage:"1",responsable:"Kata",verifie:"Engine",securise:"—",etat:"fait",critique:true,goulot:false,date_action:"2026-06-24",date_cible:null,date_completion:"2026-06-24",canal:"#thème-data",
+    quoi:"Le dictionnaire central de toutes les informations qu'ARLEN capte (un nom unique par variable, pour tous les profils).",avant:"Les noms vivaient à plusieurs endroits et divergeaient (source de bugs).",maintenant:"Dictionnaire unique bouclé pour tous les profils, divergences de noms tranchées et appliquées.",apres:"Sert de base à l'étage 2 (poids et grammaire des variables)."},
+  {id:"reserialisation",titre:"Re-sérialisation après arbitrage des noms",territoire:"T1",etage:"1→2",responsable:"Engine",verifie:"Verif + Sec",securise:"Sec",etat:"fait",critique:true,goulot:false,date_action:"2026-06-25",date_cible:"2026-06-25",date_completion:"2026-06-25",canal:"#arl-engine",
+    quoi:"Mettre le fichier-dictionnaire à jour après la décision sur les noms qui fusionnent.",avant:"9 fusions de noms décidées mais pas encore dans le fichier.",maintenant:"Fichier régénéré (107 entrées), zéro doublon, validé par les 3 regards et mergé.",apres:"Place à l'étage 2 (Kata) et à la dérivation (T1.b)."},
+  {id:"resync_table",titre:"Étage 2 — poids et grammaire des variables",territoire:"T2",etage:"2",responsable:"Kata",verifie:"Engine",securise:"—",etat:"en_cours",critique:true,goulot:true,date_action:"2026-06-25",date_cible:"2026-06-27",date_completion:null,canal:"#thème-data",
+    quoi:"Donner à chaque variable son poids et ses règles de calcul (la Table). Sans ça, impossible de calculer un score.",avant:"La Table était périmée par rapport au dictionnaire neuf.",maintenant:"Kata resynchronise la Table — c'est LE goulot : tout le calcul attend ça.",apres:"Une fois fini, Engine peut générer la configuration de score (T1.b)."},
+  {id:"compositions",titre:"Étage 2 — composition par profil",territoire:"T2",etage:"2",responsable:"Kata",verifie:"Engine",securise:"—",etat:"en_cours",critique:false,goulot:false,date_action:"2026-06-25",date_cible:"2026-06-27",date_completion:null,canal:"#thème-data",
+    quoi:"Dire quelles variables servent à quel profil (PME, IND, TPE…) et dans quel ordre.",avant:"Seul le profil PME était composé.",maintenant:"Kata étend la composition aux autres profils.",apres:"Fait passer les contrôles de cohérence au vert."},
+  {id:"t1b",titre:"Génération de la configuration de score",territoire:"T1",etage:"4",responsable:"Engine",verifie:"Verif",securise:"Sec",etat:"en_file",critique:true,goulot:false,date_action:"2026-06-25",date_cible:"2026-06-29",date_completion:null,canal:"#arl-engine",
+    quoi:"Fabriquer automatiquement la 'recette de calcul' à partir du dictionnaire + de la Table.",avant:"On écrivait cette recette à la main (risque d'erreur).",maintenant:"En attente : ça démarre dès que l'étage 2 est fini.",apres:"Active le verrou anti-erreur et déverrouille le moteur (T2)."},
+  {id:"t2_moteur",titre:"Recâblage du moteur de calcul",territoire:"T2",etage:"5",responsable:"Engine",verifie:"Verif",securise:"Sec",etat:"bloque",critique:true,goulot:false,date_action:"2026-06-24",date_cible:"2026-07-02",date_completion:null,canal:"#arl-engine",
+    quoi:"Brancher le moteur qui transforme les réponses en analyse structurée (l'ASR).",avant:"Le moteur tourne sur une ancienne recette.",maintenant:"Bloqué tant que la configuration de score (T1.b) n'est pas prête.",apres:"Produit le premier ASR propre de bout en bout."},
+  {id:"asr",titre:"Premier ASR de bout en bout",territoire:"T2",etage:"5",responsable:"Engine",verifie:"Verif",securise:"Sec",etat:"bloque",critique:true,goulot:false,date_action:"2026-06-24",date_cible:"2026-07-04",date_completion:null,canal:"#arl-engine",
+    quoi:"Le livrable final : une analyse complète produite automatiquement à partir d'une session.",avant:"Des brouillons d'ASR existent mais pas la chaîne propre.",maintenant:"Bloqué en bout de chaîne — c'est la cible.",apres:"Ouvre la voie aux autres profils puis à la mise en marché."},
+  {id:"refresh_gov",titre:"Rafraîchissement de la gouvernance",territoire:"GOV",etage:"—",responsable:"Build",verifie:"Lead",securise:"—",etat:"en_cours",critique:false,goulot:false,date_action:"2026-06-25",date_cible:"2026-06-30",date_completion:null,canal:"#arl-build",
+    quoi:"Mettre à jour les 10 documents-cadres qui décrivent comment ARLEN s'organise.",avant:"Documents datés du 7 mai, plusieurs périmés.",maintenant:"Analyse des écarts livrée (6 documents prioritaires identifiés).",apres:"Rédaction des mises à jour, après validation."},
+  {id:"rangement_gov",titre:"Rangement du dossier gouvernance",territoire:"GOV",etage:"—",responsable:"Lilla",verifie:"Lead",securise:"—",etat:"en_cours",critique:false,goulot:false,date_action:"2026-06-25",date_cible:"2026-06-28",date_completion:null,canal:"#inst-lilla",
+    quoi:"Remettre de l'ordre dans l'arborescence documentaire.",avant:"Documents éparpillés.",maintenant:"Rangement en exécution.",apres:"Structure propre prête pour le refresh."},
+  {id:"vision_board",titre:"Poste de commande (cette vue)",territoire:"GOV",etage:"—",responsable:"Build",verifie:"Lead",securise:"—",etat:"en_cours",critique:false,goulot:false,date_action:"2026-06-25",date_cible:"2026-06-25",date_completion:null,canal:"#arl-build",
+    quoi:"Le tableau de bord visuel que tu regardes — vue d'ensemble de tout le travail.",avant:"V1 trop centrée sur la technique.",maintenant:"V2 : galaxie aérée, cartes riches, contenu élargi à tous les territoires.",apres:"Phase 2 : synchro automatique + envoi des commentaires."},
+  {id:"sec_durcissements",titre:"Durcissements sécurité",territoire:"T5",etage:"—",responsable:"Sec",verifie:"—",securise:"Sec",etat:"en_file",critique:false,goulot:false,date_action:"2026-06-25",date_cible:"2026-06-26",date_completion:null,canal:"#arl-sec",
+    quoi:"Empêcher qu'un secret fuite dans l'image du serveur + sécuriser les sauvegardes.",avant:"Un fichier de secrets pouvait se retrouver embarqué.",maintenant:"Correctif en cours (re-fix du filtre) + provisioning sauvegarde.",apres:"Re-validation puis feu vert avant la mise en ligne."},
+  {id:"backup_daily",titre:"Sauvegarde automatique quotidienne",territoire:"T4",etage:"—",responsable:"Keeper",verifie:"Sec",securise:"Sec",etat:"en_file",critique:false,goulot:false,date_action:"2026-06-25",date_cible:"2026-06-27",date_completion:null,canal:"#arl-keeper",
+    quoi:"Sauvegarder la base chaque jour, chiffrée, hors site.",avant:"Sauvegarde manuelle validée mais pas automatisée.",maintenant:"Prête à déposer, attend une autorisation côté base de données (Kevin).",apres:"Activation du quotidien + surveillance 'aucune sauvegarde > 24 h'."},
+  {id:"audit_alignblock",titre:"Audit du verrou anti-erreur",territoire:"T5",etage:"—",responsable:"Verif",verifie:"—",securise:"Sec",etat:"en_file",critique:false,goulot:false,date_action:"2026-06-25",date_cible:"2026-06-29",date_completion:null,canal:"#arl-verif",
+    quoi:"Vérifier que le verrou qui bloque les incohérences mord vraiment quand il deviendra bloquant.",avant:"Le verrou tourne en observation (n'arrête rien encore).",maintenant:"Audit à préparer pour le moment où il passera bloquant.",apres:"Bascule du verrou en mode bloquant en toute confiance."},
+  {id:"file_merges",titre:"File de mises en production",territoire:"PROD",etage:"—",responsable:"Ops",verifie:"—",securise:"Sec",etat:"en_file",critique:false,goulot:false,date_action:"2026-06-25",date_cible:"2026-06-26",date_completion:null,canal:"#arl-ops",
+    quoi:"Faire entrer en production le travail validé par les 3 regards.",avant:"7 mises en production déjà passées proprement.",maintenant:"Dernière mise en prod faite ; restent le re-fix sécurité et la sauvegarde auto.",apres:"Garder la file propre au fil des validations."},
+  {id:"mise_en_ligne",titre:"Mise en ligne des protocoles + passage N2",territoire:"PROD",etage:"—",responsable:"Platform",verifie:"Verif",securise:"—",etat:"bloque",critique:false,goulot:false,date_action:"2026-06-24",date_cible:"2026-07-05",date_completion:null,canal:"#arl-platform",
+    quoi:"Mettre les questionnaires figés en ligne et brancher toute la logique d'affichage (N2).",avant:"Questionnaires construits mais pas tous en prod ; routages pilotés à la main.",maintenant:"Angle mort signalé — gros chantier à cadrer (le grand tour creuse le détail).",apres:"Plan N2 + sous-agents design/UI/UX pour finir proprement."},
+  {id:"capture_thematique",titre:"Capture des modules thématiques",territoire:"T3",etage:"—",responsable:"Platform",verifie:"Verif",securise:"—",etat:"reporte",critique:false,goulot:false,date_action:"2026-06-23",date_cible:null,date_completion:null,canal:"#arl-platform",
+    quoi:"Les questionnaires courts par thème (finance, commercial, digital…).",avant:"Track indépendant, posable quand on veut.",maintenant:"Reporté après l'ASR socle.",apres:"Repris une fois le socle en production."},
+  {id:"pb5_l3",titre:"Palier intermédiaire d'accès (L3)",territoire:"T2",etage:"—",responsable:"Mika Ops / Engine",verifie:"—",securise:"—",etat:"en_file",critique:false,goulot:false,date_action:"2026-06-24",date_cible:null,date_completion:null,canal:"#arl-ops",
+    quoi:"Un niveau d'accès intermédiaire prévu côté pré-relevé mais absent du code.",avant:"Décidé sur le principe (17 juin).",maintenant:"À séquencer côté code, hors chemin critique.",apres:"Branché à la mise en ligne."},
+  {id:"vig1",titre:"Vérif d'une variable déplacée",territoire:"T1",etage:"5",responsable:"Engine",verifie:"—",securise:"—",etat:"en_file",critique:true,goulot:false,date_action:"2026-06-24",date_cible:"2026-06-29",date_completion:null,canal:"#arl-engine",
+    quoi:"S'assurer qu'une variable déplacée (l'effectif) est bien cherchée au bon endroit.",avant:"Variable déplacée du protocole vers le pré-relevé.",maintenant:"À vérifier au moment du câblage, sinon elle reviendrait vide.",apres:"Contrôle au câblage T1.b/T2."},
+  {id:"andras",titre:"Vision long terme (institutionnels)",territoire:"CONSEIL",etage:"—",responsable:"András",verifie:"—",securise:"—",etat:"dormant",critique:false,goulot:false,date_action:null,date_cible:null,date_completion:null,canal:"#inst-andras",
+    quoi:"La vision produit/marché long terme (institutionnels, paiements X402).",avant:"Jamais activé.",maintenant:"En sommeil — à activer le moment venu.",apres:"Réveil quand le socle commercial sera posé."},
+
+  /* ---- Engine (suite) ---- */
+  {id:"cablage_livrable",titre:"Câblage moteur → livrables figés",territoire:"T2",etage:"5",responsable:"Engine",verifie:"Verif",securise:"Sec",etat:"en_file",critique:true,goulot:false,date_action:"2026-06-24",date_cible:"2026-07-04",date_completion:null,canal:"#arl-engine",
+    quoi:"Faire que le moteur reproduise exactement les 16 livrables ASR de référence, bloc par bloc.",avant:"Carte des risques préparée.",maintenant:"Pas démarré, vient après la configuration de score.",apres:"Garantit que l'analyse produite colle aux étalons."},
+  {id:"greffe_theme",titre:"Greffe des modules thématiques",territoire:"T2",etage:"5",responsable:"Engine",verifie:"Verif",securise:"—",etat:"en_file",critique:false,goulot:false,date_action:"2026-06-24",date_cible:null,date_completion:null,canal:"#arl-engine",
+    quoi:"Brancher les questions par thème (finance, digital, RH…) sur le moteur.",avant:"Les variables thématiques sont au dictionnaire.",maintenant:"À coder : ajouter le bloc thématique quand un thème est choisi.",apres:"Permet de produire des ASR thématiques."},
+
+  /* ---- Platform (suite) ---- */
+  {id:"engagement_doc",titre:"Pièce d'engagement en ligne",territoire:"T3",etage:"—",responsable:"Platform",verifie:"Verif",securise:"—",etat:"en_cours",critique:false,goulot:false,date_action:"2026-06-25",date_cible:"2026-06-26",date_completion:null,canal:"#arl-platform",
+    quoi:"Afficher et capturer la pièce d'engagement directement dans le parcours.",avant:"Composant gelé sur une ancienne branche.",maintenant:"Câblé, prêt pour validation (3 regards + visuel).",apres:"Mergé une fois validé."},
+  {id:"verif_uiux",titre:"Vérif visuelle UI/UX (sous-agents)",territoire:"T3",etage:"—",responsable:"Platform",verifie:"Verif",securise:"—",etat:"en_file",critique:false,goulot:false,date_action:"2026-06-25",date_cible:"2026-06-28",date_completion:null,canal:"#arl-platform",
+    quoi:"Revérifier que tous les questionnaires s'affichent et se comportent bien (jamais validé à l'œil).",avant:"Tout est câblé mais l'aperçu local n'est pas fiable.",maintenant:"Plan : lancer 3-4 sous-agents (design · UI · UX · fidélité) en lecture seule.",apres:"Corrections visuelles avant mise en ligne."},
+  {id:"protocol_version",titre:"Étiquettes de version des questionnaires",territoire:"T3",etage:"—",responsable:"Platform",verifie:"Verif",securise:"—",etat:"en_file",critique:false,goulot:false,date_action:"2026-06-25",date_cible:null,date_completion:null,canal:"#arl-platform",
+    quoi:"Corriger les numéros de version affichés (les routes servent le bon contenu mais annoncent un vieux numéro).",avant:"Labels périmés.",maintenant:"Correctif prêt, attend un « go ».",apres:"Cohérence des versions partout."},
+
+  /* ---- Keeper (suite) ---- */
+  {id:"backup_storage",titre:"Sauvegarde des fichiers stockés",territoire:"T4",etage:"—",responsable:"Keeper",verifie:"Sec",securise:"Sec",etat:"en_file",critique:false,goulot:false,date_action:"2026-06-25",date_cible:null,date_completion:null,canal:"#arl-keeper",
+    quoi:"Sauvegarder aussi les fichiers (contrats signés, livrables HTML), pas seulement la base.",avant:"La sauvegarde couvre 8 tables mais pas les fichiers.",maintenant:"Trou réel signalé, à combler dès que le quotidien tourne.",apres:"Sauvegarde complète base + fichiers."},
+
+  /* ---- Juridique (Emil) ---- */
+  {id:"rgpd_politique",titre:"Politique RGPD + analyse des tiers",territoire:"JUR",etage:"—",responsable:"Emil",verifie:"Lead",securise:"—",etat:"fait",critique:false,goulot:false,date_action:"2026-06-25",date_cible:null,date_completion:"2026-06-25",canal:"#inst-emil",
+    quoi:"Le cadre légal pour collecter des données : politique de protection + justification d'usage.",avant:"Le pré-relevé était bloqué faute de cadre RGPD.",maintenant:"Livré (politique v1.0 bêta + analyse), adresse rgpd@arlenhq.com créée — débloque le pré-relevé.",apres:"Canonisation + registre des traitements."},
+  {id:"rgpd_registre",titre:"Registre des traitements + contrats sous-traitants",territoire:"JUR",etage:"—",responsable:"Emil",verifie:"Lead",securise:"—",etat:"en_file",critique:false,goulot:false,date_action:"2026-06-25",date_cible:null,date_completion:null,canal:"#inst-emil",
+    quoi:"Le registre légal obligatoire + les contrats avec les prestataires (Stripe, Backblaze…).",avant:"Non commencé.",maintenant:"En file, non bloquant pour la bêta.",apres:"Récupérer les modèles standards et compléter."},
+
+  /* ---- Marché & GTM (Zolti, Don) ---- */
+  {id:"zolti_leads",titre:"Qualification des intermédiaires",territoire:"GTM",etage:"—",responsable:"Zolti",verifie:"Lead",securise:"—",etat:"en_cours",critique:false,goulot:false,date_action:"2026-05-22",date_cible:null,date_completion:null,canal:"#inst-zolti",
+    quoi:"Repérer et qualifier les experts-comptables / DAF qui pourraient distribuer ARLEN.",avant:"Base de contacts à enrichir.",maintenant:"15 profils qualifiés, base passée de 128 à 143.",apres:"Import après validation, puis dégel des contacts."},
+  {id:"zolti_pricing",titre:"Pricing de la mission 12 mois",territoire:"GTM",etage:"—",responsable:"Zolti",verifie:"Lead",securise:"—",etat:"bloque",critique:false,goulot:false,date_action:"2026-05-22",date_cible:null,date_completion:null,canal:"#inst-zolti",
+    quoi:"Fixer le prix de la mission ARLEN sur 12 mois (T0 + T6 + T12).",avant:"Travail démarré début mai.",maintenant:"Gelé le temps de stabiliser le protocole.",apres:"Version 1 à soumettre après le pilote."},
+  {id:"don_veille",titre:"Veille concurrentielle & marché",territoire:"GTM",etage:"—",responsable:"Don",verifie:"—",securise:"—",etat:"en_cours",critique:false,goulot:false,date_action:"2026-06-25",date_cible:null,date_completion:null,canal:"#inst-don",
+    quoi:"Surveiller les concurrents et le marché (qui occupe l'espace d'ARLEN).",avant:"Carte concurrentielle établie.",maintenant:"La case exacte d'ARLEN reste vide même face aux gros acteurs ; veille mensuelle.",apres:"Suivre les signaux (e-invoicing, assurtech) sans tout remonter."},
+
+  /* ---- Site & Brand (Stella, Gabor) ---- */
+  {id:"stella_wording",titre:"Wording institutionnel de l'ASR",territoire:"BRAND",etage:"—",responsable:"Stella",verifie:"Gabor",securise:"—",etat:"en_cours",critique:false,goulot:false,date_action:"2026-05-15",date_cible:null,date_completion:null,canal:"#inst-stella",
+    quoi:"Écrire le texte du livrable ASR au bon niveau (ton institutionnel).",avant:"Deux directions de ton explorées.",maintenant:"Activé, attend un actif de référence de Marcel.",apres:"Produire la version 0.1 du wording."},
+  {id:"stella_site",titre:"Site arlenhq.com",territoire:"BRAND",etage:"—",responsable:"Stella",verifie:"Gabor",securise:"—",etat:"en_cours",critique:false,goulot:false,date_action:"2026-05-15",date_cible:null,date_completion:null,canal:"#inst-stella",
+    quoi:"Faire avancer le site public (la page d'attente est en ligne).",avant:"Maquette FR + UK produite.",maintenant:"Micro-ajustements faits, attend la validation de Kevin.",apres:"Site complet après le lancement."},
+  {id:"gabor_da_asr",titre:"Direction artistique du livrable ASR",territoire:"BRAND",etage:"—",responsable:"Gabor",verifie:"—",securise:"—",etat:"en_cours",critique:false,goulot:false,date_action:"2026-06-25",date_cible:null,date_completion:null,canal:"#inst-gabor",
+    quoi:"Donner sa forme visuelle et son autorité au livrable ASR (priorité DA n°1).",avant:"Plusieurs objets visuels dispersés.",maintenant:"Vigilance : ne rien multiplier avant de verrouiller le livrable ASR.",apres:"Fixer le langage visuel, puis les composants réutilisables."},
+
+  /* ---- Contenu / référence (Marcel, Tibor) ---- */
+  {id:"marcel_etalons",titre:"Étalons de livrable ASR",territoire:"GOV",etage:"—",responsable:"Marcel",verifie:"Lead",securise:"—",etat:"fait",critique:false,goulot:false,date_action:"2026-06-21",date_cible:null,date_completion:"2026-06-21",canal:"#inst-marcel",
+    quoi:"Les exemples de référence du livrable (7 thèmes + Signal + 2 socles) qui servent de cible au moteur.",avant:"Production en cours.",maintenant:"Terminé et déposé (série 7/7 close).",apres:"Note de synthèse « points à certifier » sur demande, pour cadrer le moteur."},
+  {id:"tibor_protocoles",titre:"Ajustements protocoles PME/IND",territoire:"T3",etage:"—",responsable:"Tibor",verifie:"Viktor",securise:"—",etat:"en_cours",critique:false,goulot:false,date_action:"2026-06-18",date_cible:null,date_completion:null,canal:"#inst-tibor",
+    quoi:"Derniers réglages sur les questionnaires figés (une question reformulée, une question déplacée au pré-relevé).",avant:"Questionnaires figés en juin.",maintenant:"2 ajustements faits, attendent la re-validation de Viktor.",apres:"Viktor valide → permet la resync de la Table."},
+
+  /* ---- Stack & Infra (Robert — à rebriefer) ---- */
+  {id:"robert_stack",titre:"Stack & couche données",territoire:"STACK",etage:"—",responsable:"Robert",verifie:"—",securise:"—",etat:"dormant",critique:false,goulot:false,date_action:"2026-05-16",date_cible:null,date_completion:null,canal:"#inst-robert",
+    quoi:"L'infrastructure data d'ARLEN (Supabase, structures de stockage, Stripe Connect).",avant:"Travail data layer démarré mi-mai.",maintenant:"Dormant — périmètre recoupé par le recâblage N1, à resynchroniser/rebriefer.",apres:"Rebrief sur la séparation Capture ≠ Engine avant relance."},
+
+  /* ---- Conseil (Viktor, Deák, Arpad, Levi) ---- */
+  {id:"viktor_pb4",titre:"Doctrine des noms de variables",territoire:"CONSEIL",etage:"—",responsable:"Viktor",verifie:"Kevin",securise:"—",etat:"en_cours",critique:true,goulot:false,date_action:"2026-06-24",date_cible:"2026-06-26",date_completion:null,canal:"#inst-viktor",
+    quoi:"Trancher quels noms de variables fusionnent ou restent distincts entre PME et IND (sujet doctrinal).",avant:"Oppositions dures posées.",maintenant:"Passage doctrinal livré ; à revalider avant l'étage 2.",apres:"Validation → départ des clés en Table."},
+  {id:"deak_these",titre:"Cadrage doctrinal de la thèse ASR",territoire:"CONSEIL",etage:"—",responsable:"Deák",verifie:"—",securise:"—",etat:"en_cours",critique:false,goulot:false,date_action:"2026-06-09",date_cible:null,date_completion:null,canal:"#inst-deak",
+    quoi:"Poser les garde-fous de la « thèse structurelle » que raconte le livrable (conseil ponctuel).",avant:"Avis global livré (GO avec garde-fous).",maintenant:"En pause tant que le livrable n'est pas tranché.",apres:"Formaliser les garde-fous si GO."},
+  {id:"arpad_thematiques",titre:"Architecture des ASR thématiques",territoire:"CONSEIL",etage:"—",responsable:"Arpad",verifie:"—",securise:"—",etat:"fait",critique:false,goulot:false,date_action:"2026-06-25",date_cible:null,date_completion:"2026-06-25",canal:"#inst-arpad",
+    quoi:"Règle doctrinale : le thème règle la profondeur de lecture, jamais la réalité observée.",avant:"Question ouverte.",maintenant:"Tranché et livré.",apres:"Sert de cadre au câblage thématique."},
+  {id:"levi_archi",titre:"Architecture de mise en production",territoire:"CONSEIL",etage:"—",responsable:"Levi",verifie:"—",securise:"—",etat:"fait",critique:false,goulot:false,date_action:"2026-06-22",date_cible:null,date_completion:"2026-06-22",canal:"#inst-levi",
+    quoi:"Le plan d'organisation de la production (7 instances, 5 fonctions).",avant:"Organisation à définir.",maintenant:"Livrée et figée (carte de référence).",apres:"Levi peu sollicité depuis — disponible si besoin."}
 ];
 
-/* fonction-source isolée : la phase 2 (Notion) ne remplace QUE ceci. */
-function loadData(){ return { meta: META, secteurs: SECTEURS, chantiers: CHANTIERS }; }
+function loadData(){ return { meta:META, secteurs:SECTEURS, chantiers:CHANTIERS }; }
 
 /* ============================================================================
-   ░░  RENDU  ░░  — ne connaît que la forme retournée par loadData().
+   ░░  RENDU  ░░
    ========================================================================== */
-const ETATS = {
-  en_cours:{l:"en cours",c:"#5BA88A",bg:"#E4F1EB"},
-  en_file:{l:"en file",c:"#E0A94E",bg:"#FBF0DD"},
-  bloque:{l:"bloqué",c:"#D8745C",bg:"#FBE6DF"},
-  fait:{l:"fait",c:"#6E8FC2",bg:"#E6EDF7"},
-  reporte:{l:"reporté",c:"#9C99AC",bg:"#EFEEF2"}
-};
-const TERR_NOM = {T1:"T1 · Core",T2:"T2 · Moteur",T3:"T3 · Capture",T4:"T4 · Protéger",T5:"T5 · Sécurité",GOV:"GOV",PROD:"PROD"};
-const FR_MOIS = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
-const DATA = loadData();
-const byId = id => DATA.chantiers.find(c=>c.id===id);
-function dateFr(iso){ if(!iso) return "—"; const [y,m,d]=iso.split("-").map(Number); return d+" "+FR_MOIS[m-1]; }
+const ETATS={en_cours:{l:"en cours",c:"#5BA88A",bg:"#E4F1EB"},en_file:{l:"en file",c:"#E0A94E",bg:"#FBF0DD"},
+  bloque:{l:"bloqué",c:"#D8745C",bg:"#FBE6DF"},fait:{l:"fait",c:"#6E8FC2",bg:"#E6EDF7"},
+  reporte:{l:"reporté",c:"#9C99AC",bg:"#EFEEF2"},dormant:{l:"dormant",c:"#9C99AC",bg:"#EFEEF2"}};
+const TERR_NOM={};
+const FR_MOIS=["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+const DATA=loadData();
+DATA.secteurs.forEach(s=>TERR_NOM[s.id]=s.id+" · "+s.nom);
+const byId=id=>DATA.chantiers.find(c=>c.id===id);
+function dateFr(iso){if(!iso)return "—";const[y,m,d]=iso.split("-").map(Number);return d+" "+FR_MOIS[m-1];}
+function joursDepuis(iso){if(!iso)return 1e9;const a=new Date(iso+"T00:00:00"),b=new Date(DATA.meta.today+"T00:00:00");return Math.round((b-a)/864e5);}
 
-/* ---------- bandeau ---------- */
 function renderBandeau(){
-  const cs = DATA.chantiers;
-  document.getElementById("n-bloc").textContent = cs.filter(c=>c.etat==="bloque").length;
-  document.getElementById("n-file").textContent = cs.filter(c=>c.etat==="en_file").length;
-  document.getElementById("frais").textContent = "à jour le "+dateFr(DATA.meta.updated_at)+" · "+cs.length+" chantiers · "+DATA.meta.version+" (données en dur)";
-  document.getElementById("pied").textContent = "La Galaxie ARLEN · "+DATA.meta.version+" · lecture seule · maintenue au fil de l'eau par Build + Lead (D42).";
+  const cs=DATA.chantiers;
+  document.getElementById("n-cours").textContent=cs.filter(c=>c.etat==="en_cours").length;
+  document.getElementById("n-file").textContent=cs.filter(c=>c.etat==="en_file").length;
+  document.getElementById("n-bloc").textContent=cs.filter(c=>c.etat==="bloque").length;
+  document.getElementById("cap").innerHTML='<b>Cap</b> · '+DATA.meta.cap;
+  document.getElementById("frais").textContent="à jour le "+dateFr(DATA.meta.updated_at)+" · "+cs.length+" chantiers · "+DATA.meta.version+" (données en dur)";
+  document.getElementById("pied").textContent="La Galaxie ARLEN · "+DATA.meta.version+" · lecture seule · maintenue au fil de l'eau par Build + Lead (D42).";
 }
 
-/* ---------- vue galaxie ---------- */
-let groupBy = "territoire";
+let groupBy="territoire";
 function renderGalaxie(){
-  const host = document.getElementById("galaxie"); host.innerHTML="";
+  const host=document.getElementById("galaxie");host.innerHTML="";
   let groupes;
   if(groupBy==="territoire"){
-    groupes = DATA.secteurs.map(s=>({cle:s.id, nom:s.nom, terr:s.id, teinte:s.teinte,
-      items:DATA.chantiers.filter(c=>c.territoire===s.id)})).filter(g=>g.items.length);
-  } else {
+    groupes=DATA.secteurs.map(s=>({nom:s.nom,terr:s.id,teinte:s.teinte,items:DATA.chantiers.filter(c=>c.territoire===s.id)})).filter(g=>g.items.length);
+  }else{
     const noms=[...new Set(DATA.chantiers.map(c=>c.responsable))];
-    const teintes=["var(--c-T1)","var(--c-T2)","var(--c-T3)","var(--c-T4)","var(--c-T5)","var(--c-GOV)","var(--c-PROD)"];
-    groupes = noms.map((n,i)=>({cle:n, nom:n, terr:"", teinte:teintes[i%teintes.length],
-      items:DATA.chantiers.filter(c=>c.responsable===n)}));
+    const tns=["var(--c-T1)","var(--c-T2)","var(--c-T3)","var(--c-T4)","var(--c-T5)","var(--c-GOV)","var(--c-PROD)","var(--c-GTM)","var(--c-BRAND)","var(--c-JUR)","var(--c-STACK)","var(--c-CONSEIL)"];
+    groupes=noms.map((n,i)=>({nom:n,terr:"",teinte:tns[i%tns.length],items:DATA.chantiers.filter(c=>c.responsable===n)}));
   }
   groupes.forEach((g,i)=>{
-    const el=document.createElement("div"); el.className="secteur";
+    const orb=document.createElement("div");orb.className="orbit";
+    orb.style.setProperty("--odur",(46+(i%5)*9)+"s");orb.style.setProperty("--odel",(-(i*3.5))+"s");
+    const el=document.createElement("div");el.className="secteur";
     el.style.setProperty("--teinte",g.teinte);
-    el.style.setProperty("--dur",(6.4+(i%4)*0.7)+"s");
-    el.style.setProperty("--del",(-(i*0.9))+"s");
-    const insts = groupBy==="territoire" ? [...new Set(g.items.map(c=>c.responsable))].join(" · ") : g.items.length+" chantiers";
-    el.innerHTML =
-      '<div class="sec-tete"><span class="sec-nom">'+g.nom+'</span>'+(g.terr?'<span class="sec-terr">'+g.terr+'</span>':'')+'</div>'+
+    el.style.setProperty("--fdur",(6.2+(i%4)*0.8)+"s");el.style.setProperty("--fdel",(-(i*0.9))+"s");
+    const insts=groupBy==="territoire"?[...new Set(g.items.map(c=>c.responsable))].join(" · "):g.items.length+" chantiers";
+    el.innerHTML='<div class="sec-tete"><span class="sec-nom">'+g.nom+'</span>'+(g.terr?'<span class="sec-terr">'+g.terr+'</span>':'')+'</div>'+
       '<p class="sec-insts">'+insts+'</p><div class="chips">'+
-      g.items.map(c=>'<button class="chip" data-id="'+c.id+'"><span class="edot s-'+c.etat+'"></span>'+
-        '<span class="ctitre">'+c.titre+'</span>'+(c.critique?'<span class="cstar">🎯</span>':'')+'</button>').join('')+
-      '</div>';
-    host.appendChild(el);
+      g.items.map(c=>'<button class="chip" data-id="'+c.id+'"><span class="edot s-'+c.etat+'"></span><span class="ctitre">'+c.titre+'</span>'+(c.critique?'<span>🎯</span>':'')+'</button>').join('')+'</div>';
+    orb.appendChild(el);host.appendChild(orb);
   });
   renderCritique();
 }
-
 function renderCritique(){
-  const host=document.getElementById("cc-line"); host.innerHTML="";
+  const host=document.getElementById("cc-line");host.innerHTML="";
   DATA.meta.chemin_critique.forEach((id,i)=>{
-    const c=byId(id); if(!c) return;
-    if(i>0){ const f=document.createElement("div"); f.className="cc-flux"; host.appendChild(f); }
+    const c=byId(id);if(!c)return;
+    if(i>0){const f=document.createElement("div");f.className="cc-flux";host.appendChild(f);}
     const n=document.createElement("button");
-    n.className="cc-node"+(c.goulot?" goulot":"")+(id==="asr"?" cap":"");
-    n.dataset.id=id;
-    n.innerHTML='<div class="t">'+c.titre.split("—")[0].split("(")[0].trim()+'</div>'+
+    n.className="cc-node"+(c.goulot?" goulot":"")+(id==="asr"?" cap":"");n.dataset.id=id;
+    const etiq=c.etage==="—"?"":(c.etage==="1→2"?"Étage 1→2":"Étage "+c.etage);
+    n.innerHTML='<div class="et">'+(etiq||"Cible")+'</div><div class="t">'+c.titre.split("—")[c.titre.includes("—")?1:0].trim()+'</div>'+
       '<div class="e"><span class="edot s-'+c.etat+'" style="width:8px;height:8px;border-radius:50%"></span>'+ETATS[c.etat].l+(c.goulot?' · goulot':'')+'</div>';
     host.appendChild(n);
   });
 }
 
-/* ---------- vue liste ---------- */
 function fillFiltres(){
   const insts=[...new Set(DATA.chantiers.map(c=>c.responsable))].sort();
   const terrs=[...new Set(DATA.chantiers.map(c=>c.territoire))];
@@ -402,113 +474,122 @@ function fillFiltres(){
   document.getElementById("f-etat").innerHTML=opt("","tous")+Object.keys(ETATS).map(e=>opt(e,ETATS[e].l)).join("");
   document.getElementById("f-terr").innerHTML=opt("","tous")+terrs.map(t=>opt(t,TERR_NOM[t]||t)).join("");
 }
+function compBucket(c,b){
+  if(!b)return true; if(c.etat!=="fait"||!c.date_completion)return false;
+  const j=joursDepuis(c.date_completion);
+  if(b==="hier")return j>=1&&j<=1; if(b==="semaine")return j>=0&&j<=7;
+  if(b==="dernsem")return j>=8&&j<=14; if(b==="2sem")return j>=15&&j<=21; return true;
+}
 function renderListe(){
-  const fi=document.getElementById("f-inst").value, fe=document.getElementById("f-etat").value,
-        ft=document.getElementById("f-terr").value, tr=document.getElementById("f-tri").value;
-  let rows=DATA.chantiers.filter(c=>(!fi||c.responsable===fi)&&(!fe||c.etat===fe)&&(!ft||c.territoire===ft));
-  const ordreEtat={bloque:0,en_cours:1,en_file:2,reporte:3,fait:4};
+  const fi=val("f-inst"),fe=val("f-etat"),ft=val("f-terr"),fc=val("f-comp"),tr=val("f-tri");
+  let rows=DATA.chantiers.filter(c=>(!fi||c.responsable===fi)&&(!fe||c.etat===fe)&&(!ft||c.territoire===ft)&&compBucket(c,fc));
+  const oe={bloque:0,en_cours:1,en_file:2,reporte:3,dormant:4,fait:5};
   rows.sort((a,b)=>{
-    if(tr==="titre") return a.titre.localeCompare(b.titre,"fr");
-    if(tr==="etat") return ordreEtat[a.etat]-ordreEtat[b.etat];
-    if(tr==="cible") return (a.date_cible||"9999").localeCompare(b.date_cible||"9999");
+    if(tr==="titre")return a.titre.localeCompare(b.titre,"fr");
+    if(tr==="etat")return oe[a.etat]-oe[b.etat];
+    if(tr==="cible")return (a.date_cible||"9999").localeCompare(b.date_cible||"9999");
+    if(tr==="completion")return (b.date_completion||"").localeCompare(a.date_completion||"");
     return (b.date_action||"").localeCompare(a.date_action||"");
   });
-  const host=document.getElementById("liste"); host.innerHTML="";
+  const host=document.getElementById("liste");host.innerHTML="";
   rows.forEach(c=>{
-    const el=document.createElement("div"); el.className="ligne"; el.dataset.id=c.id;
+    const el=document.createElement("div");el.className="ligne";el.dataset.id=c.id;
+    const faitTag=c.etat==="fait"&&c.date_completion?'<span class="fait-date">✅ '+dateFr(c.date_completion)+'</span>':'<span class="meta">'+(TERR_NOM[c.territoire]||c.territoire)+'</span>';
     el.innerHTML='<span class="barre" style="background:'+ETATS[c.etat].c+'"></span>'+
       '<span class="lt">'+c.titre+(c.critique?' <span style="font-size:11px">🎯</span>':'')+'</span>'+
-      '<span class="meta">'+c.responsable+'</span>'+
-      '<span class="meta">'+(TERR_NOM[c.territoire]||c.territoire)+' · acté '+dateFr(c.date_action)+'</span>'+
+      '<span class="meta">'+c.responsable+'</span>'+faitTag+
       '<span class="etat-tag" style="background:'+ETATS[c.etat].bg+';color:'+ETATS[c.etat].c+'">'+ETATS[c.etat].l+'</span>';
     host.appendChild(el);
   });
   document.getElementById("compte").textContent=rows.length+" chantier"+(rows.length>1?"s":"");
 }
 
-/* ---------- vue calendrier ---------- */
-let calMode="action";
+let calMode="realise";
 function renderCalendrier(){
-  const host=document.getElementById("cal"); host.innerHTML="";
-  const champ = calMode==="action" ? "date_action" : "date_cible";
-  const items=DATA.chantiers.filter(c=>c[champ]);
+  const host=document.getElementById("cal");host.innerHTML="";
+  const champ=calMode==="realise"?"date_completion":calMode==="action"?"date_action":"date_cible";
+  let items=DATA.chantiers.filter(c=>c[champ]);
+  if(calMode==="realise")items=items.filter(c=>c.etat==="fait");
   const jours=[...new Set(items.map(c=>c[champ]))].sort();
+  if(!jours.length){host.innerHTML='<div style="color:var(--encre-doux);font-size:13px;padding:10px">Rien encore — on commence à nourrir l\'historique du fait à partir de maintenant.</div>';}
   jours.forEach(j=>{
-    const col=document.createElement("div"); col.className="calcol";
+    const col=document.createElement("div");col.className="calcol";
     const liste=items.filter(c=>c[champ]===j);
     col.innerHTML='<div class="jour">'+dateFr(j)+'</div>'+liste.map(c=>
       '<div class="calcard" data-id="'+c.id+'"><div class="ct"><span class="edot s-'+c.etat+'" style="width:9px;height:9px;border-radius:50%;margin-top:3px"></span>'+
-      c.titre+(c.critique?' 🎯':'')+'</div><div class="cm">'+c.responsable+' · '+(TERR_NOM[c.territoire]||c.territoire)+'</div></div>').join("");
+      (calMode==="realise"?"✅ ":"")+c.titre+(c.critique?' 🎯':'')+'</div><div class="cm">'+c.responsable+' · '+(TERR_NOM[c.territoire]||c.territoire)+'</div></div>').join("");
     host.appendChild(col);
   });
-  document.getElementById("cal-compte").textContent=items.length+" daté"+(items.length>1?"s":"")+(calMode==="cible"?" (échéance)":"");
+  document.getElementById("cal-compte").textContent=items.length+(calMode==="realise"?" réalisé"+(items.length>1?"s":""):" daté"+(items.length>1?"s":""));
 }
 
-/* ---------- carte de détail ---------- */
 function openDetail(id){
-  const c=byId(id); if(!c) return;
-  const e=ETATS[c.etat];
+  const c=byId(id);if(!c)return;const e=ETATS[c.etat];
   const row=(k,v)=>v&&v!=="—"?'<tr><td class="k">'+k+'</td><td class="v">'+v+'</td></tr>':'';
+  const etape=(cls,lab,txt)=>txt?'<div class="etape '+cls+'"><div class="marq"><div class="pt"></div><div class="bar"></div></div><div class="corps"><div class="lab">'+lab+'</div><div class="txt">'+txt+'</div></div></div>':'';
   document.getElementById("detail").innerHTML=
     '<div class="dtete"><h2>'+c.titre+'</h2><button class="fermer" id="x" aria-label="fermer">✕</button></div>'+
     '<div class="dtags">'+
       '<span class="dtag" style="background:'+e.bg+';color:'+e.c+'">'+e.l+'</span>'+
       '<span class="dtag" style="background:#fff;border:1px solid var(--bord);color:var(--encre-doux)">'+(TERR_NOM[c.territoire]||c.territoire)+'</span>'+
-      (c.etage!=="—"?'<span class="dtag" style="background:#fff;border:1px solid var(--bord);color:var(--encre-doux)">étage '+c.etage+'</span>':'')+
+      (c.etage&&c.etage!=="—"?'<span class="dtag" style="background:#fff;border:1px solid var(--bord);color:var(--encre-doux)">étage '+c.etage+'</span>':'')+
       (c.critique?'<span class="dtag" style="background:#FBEFF3;color:#B05278">🎯 chemin critique</span>':'')+
       (c.goulot?'<span class="dtag" style="background:#E4F1EB;color:#3E7E63">goulot actuel</span>':'')+
     '</div>'+
-    '<table>'+row("Responsable",c.responsable)+row("Vérifie",c.verifie)+row("Sécurise",c.securise)+
+    '<table class="resume">'+row("Responsable",c.responsable)+row("Vérifie",c.verifie)+row("Sécurise",c.securise)+
       row("Dernière action",dateFr(c.date_action))+row("Date-cible",c.date_cible?dateFr(c.date_cible):"—")+
+      (c.date_completion?row("✅ Terminé le",dateFr(c.date_completion)):"")+
       '<tr><td class="k">Canal</td><td class="v canal">'+c.canal+'</td></tr></table>'+
-    '<div class="note">'+c.note+'</div>'+
-    '<div class="hist">Historique des actions — disponible en phase 2 (synchro Notion).</div>';
+    '<div class="recit">'+(c.quoi?'<div class="quoi">'+c.quoi+'</div>':'')+
+      etape("av","Avant",c.avant)+etape("mt","Maintenant",c.maintenant)+etape("ap","Après",c.apres)+'</div>'+
+    '<div class="commentaire"><div class="lab">💬 Ton commentaire</div>'+
+      '<textarea id="cmt" placeholder="Note, question, décision… (l\'envoi automatique vers Slack arrive en phase 2)"></textarea>'+
+      '<div class="row"><span class="ph">Zone réservée — sauvegarde locale pour l\'instant</span><button id="cmt-save">Garder</button></div></div>';
   document.getElementById("scrim").classList.add("on");
   document.getElementById("x").onclick=closeDetail;
+  const cmt=document.getElementById("cmt"),key="cmt:"+id;
+  cmt.value=localStorage.getItem(key)||"";
+  document.getElementById("cmt-save").onclick=()=>{localStorage.setItem(key,cmt.value);document.getElementById("cmt-save").textContent="Gardé ✓";};
 }
-function closeDetail(){ document.getElementById("scrim").classList.remove("on"); }
+function closeDetail(){document.getElementById("scrim").classList.remove("on");}
 
-/* ---------- navigation : onglets + flèches + swipe ---------- */
-const VUES=["galaxie","liste","calendrier"];
-let vue=0;
+const VUES=["galaxie","liste","calendrier"];let vue=0;
 function setVue(i){
-  vue=(i+VUES.length)%VUES.length; const nom=VUES[vue];
+  vue=(i+VUES.length)%VUES.length;const nom=VUES[vue];
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.v===nom));
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
   document.getElementById("v-"+nom).classList.add("on");
-  if(nom==="liste")renderListe(); if(nom==="calendrier")renderCalendrier();
+  if(nom==="liste")renderListe();if(nom==="calendrier")renderCalendrier();
 }
+function val(id){return document.getElementById(id).value;}
 
-/* ---------- câblage des événements ---------- */
 function wire(){
-  document.getElementById("tabs").onclick=e=>{const t=e.target.closest(".tab"); if(t)setVue(VUES.indexOf(t.dataset.v));};
+  document.getElementById("tabs").onclick=e=>{const t=e.target.closest(".tab");if(t)setVue(VUES.indexOf(t.dataset.v));};
   document.getElementById("prev").onclick=()=>setVue(vue-1);
   document.getElementById("next").onclick=()=>setVue(vue+1);
-  document.getElementById("grp").onclick=e=>{const b=e.target.closest("button"); if(!b)return;
-    groupBy=b.dataset.g; document.querySelectorAll("#grp button").forEach(x=>x.classList.toggle("on",x===b)); renderGalaxie();};
-  document.getElementById("calmode").onclick=e=>{const b=e.target.closest("button"); if(!b)return;
-    calMode=b.dataset.m; document.querySelectorAll("#calmode button").forEach(x=>x.classList.toggle("on",x===b)); renderCalendrier();};
-  ["f-inst","f-etat","f-terr","f-tri"].forEach(id=>document.getElementById(id).onchange=renderListe);
-  /* clic sur n'importe quel élément porteur de data-id → carte détail */
-  document.body.addEventListener("click",e=>{const el=e.target.closest("[data-id]"); if(el&&!e.target.closest(".scrim"))openDetail(el.dataset.id);});
-  /* filtres rapides du bandeau */
-  document.getElementById("pill-bloc").onclick=()=>{setVue(1);document.getElementById("f-etat").value="bloque";renderListe();};
+  document.getElementById("pause").onclick=()=>{const p=document.body.classList.toggle("paused");
+    document.getElementById("pause-ico").textContent=p?"▶":"⏸";document.getElementById("pause-txt").textContent=p?"reprendre":"rotation";};
+  document.getElementById("grp").onclick=e=>{const b=e.target.closest("button");if(!b)return;groupBy=b.dataset.g;
+    document.querySelectorAll("#grp button").forEach(x=>x.classList.toggle("on",x===b));renderGalaxie();};
+  document.getElementById("calmode").onclick=e=>{const b=e.target.closest("button");if(!b)return;calMode=b.dataset.m;
+    document.querySelectorAll("#calmode button").forEach(x=>x.classList.toggle("on",x===b));renderCalendrier();};
+  ["f-inst","f-etat","f-terr","f-comp","f-tri"].forEach(id=>document.getElementById(id).onchange=renderListe);
+  document.body.addEventListener("click",e=>{const el=e.target.closest("[data-id]");if(el&&!e.target.closest(".scrim"))openDetail(el.dataset.id);});
+  document.getElementById("pill-cours").onclick=()=>{setVue(1);document.getElementById("f-etat").value="en_cours";renderListe();};
   document.getElementById("pill-file").onclick=()=>{setVue(1);document.getElementById("f-etat").value="en_file";renderListe();};
-  /* scrim : clic fond + Échap ferment */
+  document.getElementById("pill-bloc").onclick=()=>{setVue(1);document.getElementById("f-etat").value="bloque";renderListe();};
   document.getElementById("scrim").addEventListener("click",e=>{if(e.target.id==="scrim")closeDetail();});
   document.addEventListener("keydown",e=>{
     if(e.key==="Escape")closeDetail();
-    else if(e.key==="ArrowRight"&&!document.getElementById("scrim").classList.contains("on"))setVue(vue+1);
-    else if(e.key==="ArrowLeft"&&!document.getElementById("scrim").classList.contains("on"))setVue(vue-1);
+    else if(!document.getElementById("scrim").classList.contains("on")){
+      if(e.key==="ArrowRight")setVue(vue+1);else if(e.key==="ArrowLeft")setVue(vue-1);}
   });
-  /* swipe tactile entre vues */
-  let x0=null; const m=document.querySelector(".wrap");
+  let x0=null;const m=document.querySelector(".wrap");
   m.addEventListener("touchstart",e=>x0=e.touches[0].clientX,{passive:true});
-  m.addEventListener("touchend",e=>{if(x0===null)return;const dx=e.changedTouches[0].clientX-x0;
-    if(Math.abs(dx)>70){setVue(dx<0?vue+1:vue-1);} x0=null;},{passive:true});
+  m.addEventListener("touchend",e=>{if(x0===null)return;const dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>70)setVue(dx<0?vue+1:vue-1);x0=null;},{passive:true});
 }
 
-renderBandeau(); fillFiltres(); renderGalaxie(); wire();
+renderBandeau();fillFiltres();renderGalaxie();wire();
 </script>
 </body>
 </html>
