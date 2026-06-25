@@ -69,23 +69,30 @@ header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px 26px;margin-bot
 .seg button{border:0;background:transparent;font-family:inherit;font-size:12.5px;color:var(--encre-doux);padding:6px 13px;border-radius:13px;cursor:pointer}
 .seg button.on{background:var(--encre);color:#fff}
 .galaxie{display:flex;flex-wrap:wrap;justify-content:center;gap:42px 56px;padding:34px 6px 10px}
-.orbit{animation:orbite var(--odur,60s) ease-in-out var(--odel,0s) infinite}
+.orbit{animation:orbite var(--odur,38s) linear var(--odel,0s) infinite}
 .secteur{position:relative;width:300px;border-radius:var(--radius);padding:20px 20px 16px;background:var(--carte);border:1px solid #fff;box-shadow:var(--ombre);backdrop-filter:blur(4px);animation:flotte var(--fdur,7s) ease-in-out var(--fdel,0s) infinite}
 .secteur::before{content:"";position:absolute;inset:0;border-radius:var(--radius);background:var(--teinte);opacity:.32;z-index:-1}
 .secteur::after{content:"";position:absolute;inset:0;border-radius:var(--radius);box-shadow:inset 0 0 0 1.5px #ffffffaa;pointer-events:none}
 .secteur:nth-child(3n+1){width:312px} .secteur:nth-child(3n+2){width:286px} .secteur:nth-child(3n+3){width:300px}
 @keyframes flotte{0%,100%{transform:translateY(0)}50%{transform:translateY(-13px)}}
-@keyframes orbite{0%,100%{translate:0 0}25%{translate:14px -10px}50%{translate:-8px 8px}75%{translate:-14px -6px}}
+@keyframes orbite{0%{translate:var(--r,34px) 0}25%{translate:0 var(--r,34px)}50%{translate:calc(var(--r,34px)*-1) 0}75%{translate:0 calc(var(--r,34px)*-1)}100%{translate:var(--r,34px) 0}}
 body.paused .orbit,body.paused .secteur,body.paused::before,body.paused::after{animation-play-state:paused}
 .sec-tete{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;gap:8px}
 .sec-nom{font-family:'Fraunces',serif;font-weight:600;font-size:18px}
 .sec-terr{font-size:11px;color:var(--encre-doux);background:#ffffffcc;border-radius:10px;padding:2px 8px;white-space:nowrap}
 .sec-insts{font-size:11.5px;color:var(--encre-doux);margin:0 0 11px}
 .chips{display:flex;flex-direction:column;gap:6px}
-.chip{display:flex;align-items:center;gap:9px;background:#ffffffe6;border:1px solid #fff;border-radius:15px;padding:8px 11px;cursor:pointer;font-size:12.5px;transition:transform .18s,box-shadow .18s;text-align:left;width:100%}
+.chip{position:relative;display:flex;align-items:center;gap:9px;background:#ffffffe6;border:1px solid #fff;border-radius:15px;padding:8px 11px 15px;cursor:pointer;font-size:12.5px;transition:transform .18s,box-shadow .18s;text-align:left;width:100%}
 .chip:hover{transform:translateX(3px);box-shadow:0 8px 22px -16px rgba(80,70,120,.6)}
 .chip .edot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
 .chip .ctitre{flex:1;line-height:1.25}
+.chip-prog{position:absolute;left:11px;right:11px;bottom:6px;height:3px;border-radius:3px;background:#ECEAF1;overflow:hidden}
+.chip-prog i{display:block;height:100%;border-radius:3px}
+.chip.chaud{background:#FBE6E0;box-shadow:0 0 0 1.6px #D55A45aa}
+.chip.chaud .ctitre{color:#A8412A;font-weight:500}
+.chip.chaud .edot{background:#D9483A;animation:chaudPulse 1.6s ease-in-out infinite}
+@keyframes chaudPulse{0%,100%{box-shadow:0 0 0 0 rgba(217,72,58,.6)}50%{box-shadow:0 0 0 6px rgba(217,72,58,0)}}
+body.paused .chip.chaud .edot{animation-play-state:paused}
 .edot.s-en_cours{background:var(--e-encours)} .edot.s-en_file{background:var(--e-enfile)}
 .edot.s-bloque{background:var(--e-bloque);animation:battement 1.8s ease-in-out infinite}
 .edot.s-fait{background:var(--e-fait)} .edot.s-reporte{background:var(--e-reporte)} .edot.s-dormant{background:var(--e-dormant)}
@@ -116,7 +123,8 @@ body.paused .cc-flux{animation-play-state:paused}
 .filtres label{font-size:11.5px;color:var(--encre-tres-doux);margin-right:-4px}
 .compte{margin-left:auto;font-size:12.5px;color:var(--encre-doux)}
 .liste{display:flex;flex-direction:column;gap:8px}
-.ligne{display:grid;grid-template-columns:14px 2fr .8fr .9fr .9fr;gap:14px;align-items:center;background:var(--carte);border:1px solid #fff;border-radius:18px;padding:13px 18px;cursor:pointer;box-shadow:0 10px 30px -26px rgba(80,70,120,.6);transition:transform .18s,box-shadow .18s}
+.ligne{position:relative;display:grid;grid-template-columns:14px 2fr .8fr .9fr .9fr;gap:14px;align-items:center;background:var(--carte);border:1px solid #fff;border-radius:18px;padding:13px 18px 18px;cursor:pointer;box-shadow:0 10px 30px -26px rgba(80,70,120,.6);transition:transform .18s,box-shadow .18s}
+.ligne.chaud{box-shadow:0 0 0 1.5px #D55A4599,0 10px 30px -26px rgba(80,70,120,.6)}
 .ligne:hover{transform:translateY(-2px);box-shadow:var(--ombre)}
 .ligne .lt{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px}
 .ligne .meta{font-size:12px;color:var(--encre-doux)}
@@ -150,6 +158,13 @@ body.paused .cc-flux{animation-play-state:paused}
 .detail .resume td.k{color:var(--encre-doux);width:40%}
 .detail .resume td.v{text-align:right;font-weight:500}
 .detail .canal{color:var(--e-fait);font-weight:500}
+.prog-detail{margin-top:16px}
+.prog-detail .pl{display:flex;justify-content:space-between;font-size:12px;color:var(--encre-doux);margin-bottom:6px}
+.prog-detail .pl b{color:var(--encre);font-weight:600}
+.prog-bar{height:8px;border-radius:8px;background:#ECEAF1;overflow:hidden}
+.prog-bar i{display:block;height:100%;border-radius:8px}
+.ligne-prog{position:absolute;left:18px;right:18px;bottom:6px;height:3px;border-radius:3px;background:#ECEAF1;overflow:hidden}
+.ligne-prog i{display:block;height:100%;border-radius:3px}
 .recit{margin-top:16px}
 .recit .quoi{font-size:14px;line-height:1.6;color:var(--encre);background:#FBF9F5;border-radius:16px;padding:14px 16px}
 .etape{display:flex;gap:12px;margin-top:14px}
@@ -405,6 +420,27 @@ const CHANTIERS = [
     quoi:"Figer le format des données qui passent entre la capture et le moteur (le « contrat payload »).",avant:"Champs minimum déjà gravés (type de session, thème, version signal…).",maintenant:"Imminent — se co-produit dès que le raccordement démarre.",apres:"Préalable au branchement moteur ↔ capture."}
 ];
 
+/* avancement (0-100) · difficulté (faible|moyenne|élevée) · temps estimé pour finir.
+   Estimations éditables à la main, comme le reste (phase 2 : alimentées par Notion). */
+const PROGRES={
+  etage1:{p:100,d:"moyenne",e:"—"}, reserialisation:{p:100,d:"moyenne",e:"—"},
+  resync_table:{p:45,d:"élevée",e:"~2-3 j"}, compositions:{p:65,d:"moyenne",e:"~1-2 j"},
+  t1b:{p:10,d:"élevée",e:"~2-3 j"}, t2_moteur:{p:5,d:"élevée",e:"~1 sem"}, asr:{p:5,d:"élevée",e:"~1 sem"},
+  refresh_gov:{p:45,d:"moyenne",e:"~3-4 j"}, rangement_gov:{p:70,d:"faible",e:"~1 j"}, vision_board:{p:90,d:"moyenne",e:"~1 j"},
+  sec_durcissements:{p:55,d:"moyenne",e:"~1 j"}, backup_daily:{p:70,d:"moyenne",e:"~1 j"}, audit_alignblock:{p:15,d:"moyenne",e:"~1-2 j"},
+  file_merges:{p:60,d:"faible",e:"continu"}, mise_en_ligne:{p:15,d:"élevée",e:"~1-2 sem"}, capture_thematique:{p:0,d:"moyenne",e:"~1 sem"},
+  pb5_l3:{p:10,d:"moyenne",e:"~2-3 j"}, vig1:{p:20,d:"faible",e:"~2 h"}, andras:{p:0,d:"élevée",e:"—"},
+  cablage_livrable:{p:10,d:"élevée",e:"~1 sem"}, greffe_theme:{p:10,d:"élevée",e:"~3-4 j"}, engagement_doc:{p:80,d:"moyenne",e:"~½ j"},
+  verif_uiux:{p:10,d:"moyenne",e:"~2-3 j"}, protocol_version:{p:30,d:"faible",e:"~2 h"}, backup_storage:{p:5,d:"moyenne",e:"~1 j"},
+  rgpd_politique:{p:100,d:"moyenne",e:"—"}, rgpd_registre:{p:10,d:"moyenne",e:"~2-3 j"},
+  zolti_leads:{p:40,d:"faible",e:"continu"}, zolti_pricing:{p:30,d:"moyenne",e:"~2-3 j"}, don_veille:{p:60,d:"faible",e:"continu"},
+  stella_wording:{p:30,d:"moyenne",e:"~2-3 j"}, stella_site:{p:55,d:"moyenne",e:"~1 sem"}, gabor_da_asr:{p:20,d:"élevée",e:"~1 sem"},
+  marcel_etalons:{p:100,d:"élevée",e:"—"}, tibor_protocoles:{p:70,d:"faible",e:"~½ j"}, robert_stack:{p:15,d:"élevée",e:"~1-2 j"},
+  viktor_pb4:{p:75,d:"élevée",e:"~1 j"}, deak_these:{p:50,d:"moyenne",e:"ponctuel"}, arpad_thematiques:{p:100,d:"moyenne",e:"—"},
+  levi_archi:{p:100,d:"élevée",e:"—"}, levi_secu_design:{p:10,d:"élevée",e:"~2-3 j"}, levi_payload:{p:15,d:"moyenne",e:"~1-2 j"}
+};
+CHANTIERS.forEach(c=>{const m=PROGRES[c.id]||{};c.progress=(m.p!=null?m.p:0);c.diff=m.d||"moyenne";c.effort=m.e||"—";});
+
 function loadData(){ return { meta:META, secteurs:SECTEURS, chantiers:CHANTIERS }; }
 
 /* ============================================================================
@@ -413,6 +449,7 @@ function loadData(){ return { meta:META, secteurs:SECTEURS, chantiers:CHANTIERS 
 const ETATS={en_cours:{l:"en cours",c:"#5BA88A",bg:"#E4F1EB"},en_file:{l:"en file",c:"#E0A94E",bg:"#FBF0DD"},
   bloque:{l:"bloqué",c:"#D8745C",bg:"#FBE6DF"},fait:{l:"fait",c:"#6E8FC2",bg:"#E6EDF7"},
   reporte:{l:"reporté",c:"#9C99AC",bg:"#EFEEF2"},dormant:{l:"dormant",c:"#9C99AC",bg:"#EFEEF2"}};
+const DIFF={faible:{bg:"#E4F1EB",c:"#3E7E63"},moyenne:{bg:"#FBF0DD",c:"#8A6420"},"élevée":{bg:"#FBE6E0",c:"#A8412A"}};
 const TERR_NOM={};
 const FR_MOIS=["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
 const DATA=loadData();
@@ -444,14 +481,16 @@ function renderGalaxie(){
   }
   groupes.forEach((g,i)=>{
     const orb=document.createElement("div");orb.className="orbit";
-    orb.style.setProperty("--odur",(46+(i%5)*9)+"s");orb.style.setProperty("--odel",(-(i*3.5))+"s");
+    orb.style.setProperty("--r",(26+((i*13)%20))+"px");
+    orb.style.setProperty("--odur",(30+(i%6)*3)+"s");orb.style.setProperty("--odel",(-(i*4.5))+"s");
     const el=document.createElement("div");el.className="secteur";
     el.style.setProperty("--teinte",g.teinte);
     el.style.setProperty("--fdur",(6.2+(i%4)*0.8)+"s");el.style.setProperty("--fdel",(-(i*0.9))+"s");
     const insts=groupBy==="territoire"?[...new Set(g.items.map(c=>c.responsable))].join(" · "):g.items.length+" chantiers";
     el.innerHTML='<div class="sec-tete"><span class="sec-nom">'+g.nom+'</span>'+(g.terr?'<span class="sec-terr">'+g.terr+'</span>':'')+'</div>'+
       '<p class="sec-insts">'+insts+'</p><div class="chips">'+
-      g.items.map(c=>'<button class="chip" data-id="'+c.id+'"><span class="edot s-'+c.etat+'"></span><span class="ctitre">'+c.titre+'</span>'+(c.critique?'<span>🎯</span>':'')+'</button>').join('')+'</div>';
+      g.items.map(c=>'<button class="chip'+(c.etat==="bloque"?" chaud":"")+'" data-id="'+c.id+'"><span class="edot s-'+c.etat+'"></span><span class="ctitre">'+c.titre+'</span>'+(c.critique?'<span>🎯</span>':'')+
+        '<span class="chip-prog"><i style="width:'+c.progress+'%;background:'+ETATS[c.etat].c+'"></i></span></button>').join('')+'</div>';
     orb.appendChild(el);host.appendChild(orb);
   });
   renderCritique();
@@ -497,12 +536,13 @@ function renderListe(){
   });
   const host=document.getElementById("liste");host.innerHTML="";
   rows.forEach(c=>{
-    const el=document.createElement("div");el.className="ligne";el.dataset.id=c.id;
+    const el=document.createElement("div");el.className="ligne"+(c.etat==="bloque"?" chaud":"");el.dataset.id=c.id;
     const faitTag=c.etat==="fait"&&c.date_completion?'<span class="fait-date">✅ '+dateFr(c.date_completion)+'</span>':'<span class="meta">'+(TERR_NOM[c.territoire]||c.territoire)+'</span>';
     el.innerHTML='<span class="barre" style="background:'+ETATS[c.etat].c+'"></span>'+
       '<span class="lt">'+c.titre+(c.critique?' <span style="font-size:11px">🎯</span>':'')+'</span>'+
       '<span class="meta">'+c.responsable+'</span>'+faitTag+
-      '<span class="etat-tag" style="background:'+ETATS[c.etat].bg+';color:'+ETATS[c.etat].c+'">'+ETATS[c.etat].l+'</span>';
+      '<span class="etat-tag" style="background:'+ETATS[c.etat].bg+';color:'+ETATS[c.etat].c+'">'+ETATS[c.etat].l+' · '+c.progress+'%</span>'+
+      '<span class="ligne-prog"><i style="width:'+c.progress+'%;background:'+ETATS[c.etat].c+'"></i></span>';
     host.appendChild(el);
   });
   document.getElementById("compte").textContent=rows.length+" chantier"+(rows.length>1?"s":"");
@@ -528,7 +568,7 @@ function renderCalendrier(){
 }
 
 function openDetail(id){
-  const c=byId(id);if(!c)return;const e=ETATS[c.etat];
+  const c=byId(id);if(!c)return;const e=ETATS[c.etat];const dc=DIFF[c.diff]||{bg:"#fff",c:"var(--encre-doux)"};
   const row=(k,v)=>v&&v!=="—"?'<tr><td class="k">'+k+'</td><td class="v">'+v+'</td></tr>':'';
   const etape=(cls,lab,txt)=>txt?'<div class="etape '+cls+'"><div class="marq"><div class="pt"></div><div class="bar"></div></div><div class="corps"><div class="lab">'+lab+'</div><div class="txt">'+txt+'</div></div></div>':'';
   document.getElementById("detail").innerHTML=
@@ -539,7 +579,10 @@ function openDetail(id){
       (c.etage&&c.etage!=="—"?'<span class="dtag" style="background:#fff;border:1px solid var(--bord);color:var(--encre-doux)">étage '+c.etage+'</span>':'')+
       (c.critique?'<span class="dtag" style="background:#FBEFF3;color:#B05278">🎯 chemin critique</span>':'')+
       (c.goulot?'<span class="dtag" style="background:#E4F1EB;color:#3E7E63">goulot actuel</span>':'')+
+      '<span class="dtag" style="background:'+dc.bg+';color:'+dc.c+'">difficulté '+c.diff+'</span>'+
+      (c.effort&&c.effort!=="—"?'<span class="dtag" style="background:#fff;border:1px solid var(--bord);color:var(--encre-doux)">⏱ '+c.effort+'</span>':'')+
     '</div>'+
+    '<div class="prog-detail"><div class="pl"><span>Avancement</span><b>'+c.progress+'%</b></div><div class="prog-bar"><i style="width:'+c.progress+'%;background:'+e.c+'"></i></div></div>'+
     '<table class="resume">'+row("Responsable",c.responsable)+row("Vérifie",c.verifie)+row("Sécurise",c.securise)+
       row("Dernière action",dateFr(c.date_action))+row("Date-cible",c.date_cible?dateFr(c.date_cible):"—")+
       (c.date_completion?row("✅ Terminé le",dateFr(c.date_completion)):"")+
