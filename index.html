@@ -93,6 +93,10 @@ body.paused .orbit,body.paused .secteur,body.paused::before,body.paused::after{a
 .chip.chaud .edot{background:#D9483A;animation:chaudPulse 1.6s ease-in-out infinite}
 @keyframes chaudPulse{0%,100%{box-shadow:0 0 0 0 rgba(217,72,58,.6)}50%{box-shadow:0 0 0 6px rgba(217,72,58,0)}}
 body.paused .chip.chaud .edot{animation-play-state:paused}
+.chk{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#5BA88A;color:#fff;font-size:9px;font-weight:600;flex:0 0 auto}
+.chip.fait{background:#EDF5EF}
+.chip.fait .ctitre{color:#3E7E63}
+.lt.done{text-decoration:line-through;text-decoration-color:#A9D2C0;color:var(--encre-tres-doux)}
 .edot.s-en_cours{background:var(--e-encours)} .edot.s-en_file{background:var(--e-enfile)}
 .edot.s-bloque{background:var(--e-bloque);animation:battement 1.8s ease-in-out infinite}
 .edot.s-fait{background:var(--e-fait)} .edot.s-reporte{background:var(--e-reporte)} .edot.s-dormant{background:var(--e-dormant)}
@@ -271,7 +275,7 @@ body.paused .cc-flux{animation-play-state:paused}
     <span><i style="background:#5BA88A"></i>en cours</span>
     <span><i style="background:#E0A94E"></i>en file</span>
     <span><i style="background:#D8745C"></i>bloqué</span>
-    <span><i style="background:#6E8FC2"></i>fait</span>
+    <span><span class="chk" style="width:14px;height:14px;font-size:8px">✓</span>fait</span>
     <span><i style="background:#B4B0BF"></i>reporté</span>
     <span><i style="background:#C9C6D4"></i>dormant</span>
     <span>🎯 chemin critique</span>
@@ -489,8 +493,10 @@ function renderGalaxie(){
     const insts=groupBy==="territoire"?[...new Set(g.items.map(c=>c.responsable))].join(" · "):g.items.length+" chantiers";
     el.innerHTML='<div class="sec-tete"><span class="sec-nom">'+g.nom+'</span>'+(g.terr?'<span class="sec-terr">'+g.terr+'</span>':'')+'</div>'+
       '<p class="sec-insts">'+insts+'</p><div class="chips">'+
-      g.items.map(c=>'<button class="chip'+(c.etat==="bloque"?" chaud":"")+'" data-id="'+c.id+'"><span class="edot s-'+c.etat+'"></span><span class="ctitre">'+c.titre+'</span>'+(c.critique?'<span>🎯</span>':'')+
-        '<span class="chip-prog"><i style="width:'+c.progress+'%;background:'+ETATS[c.etat].c+'"></i></span></button>').join('')+'</div>';
+      g.items.map(c=>{const done=c.etat==="fait";const pc=done?"#5BA88A":ETATS[c.etat].c;
+        return '<button class="chip'+(c.etat==="bloque"?" chaud":"")+(done?" fait":"")+'" data-id="'+c.id+'">'+
+        (done?'<span class="chk">✓</span>':'<span class="edot s-'+c.etat+'"></span>')+'<span class="ctitre">'+c.titre+'</span>'+(c.critique?'<span>🎯</span>':'')+
+        '<span class="chip-prog"><i style="width:'+c.progress+'%;background:'+pc+'"></i></span></button>';}).join('')+'</div>';
     orb.appendChild(el);host.appendChild(orb);
   });
   renderCritique();
@@ -536,13 +542,14 @@ function renderListe(){
   });
   const host=document.getElementById("liste");host.innerHTML="";
   rows.forEach(c=>{
+    const done=c.etat==="fait";const pc=done?"#5BA88A":ETATS[c.etat].c;
     const el=document.createElement("div");el.className="ligne"+(c.etat==="bloque"?" chaud":"");el.dataset.id=c.id;
-    const faitTag=c.etat==="fait"&&c.date_completion?'<span class="fait-date">✅ '+dateFr(c.date_completion)+'</span>':'<span class="meta">'+(TERR_NOM[c.territoire]||c.territoire)+'</span>';
-    el.innerHTML='<span class="barre" style="background:'+ETATS[c.etat].c+'"></span>'+
-      '<span class="lt">'+c.titre+(c.critique?' <span style="font-size:11px">🎯</span>':'')+'</span>'+
+    const faitTag=done&&c.date_completion?'<span class="fait-date">✅ '+dateFr(c.date_completion)+'</span>':'<span class="meta">'+(TERR_NOM[c.territoire]||c.territoire)+'</span>';
+    el.innerHTML=(done?'<span class="chk" style="margin:-2px 0">✓</span>':'<span class="barre" style="background:'+pc+'"></span>')+
+      '<span class="lt'+(done?' done':'')+'">'+c.titre+(c.critique?' <span style="font-size:11px">🎯</span>':'')+'</span>'+
       '<span class="meta">'+c.responsable+'</span>'+faitTag+
-      '<span class="etat-tag" style="background:'+ETATS[c.etat].bg+';color:'+ETATS[c.etat].c+'">'+ETATS[c.etat].l+' · '+c.progress+'%</span>'+
-      '<span class="ligne-prog"><i style="width:'+c.progress+'%;background:'+ETATS[c.etat].c+'"></i></span>';
+      '<span class="etat-tag" style="background:'+(done?'#E4F1EB':ETATS[c.etat].bg)+';color:'+(done?'#3E7E63':ETATS[c.etat].c)+'">'+(done?'✓ fait':ETATS[c.etat].l+' · '+c.progress+'%')+'</span>'+
+      '<span class="ligne-prog"><i style="width:'+c.progress+'%;background:'+pc+'"></i></span>';
     host.appendChild(el);
   });
   document.getElementById("compte").textContent=rows.length+" chantier"+(rows.length>1?"s":"");
@@ -574,7 +581,7 @@ function openDetail(id){
   document.getElementById("detail").innerHTML=
     '<div class="dtete"><h2>'+c.titre+'</h2><button class="fermer" id="x" aria-label="fermer">✕</button></div>'+
     '<div class="dtags">'+
-      '<span class="dtag" style="background:'+e.bg+';color:'+e.c+'">'+e.l+'</span>'+
+      (c.etat==="fait"?'<span class="dtag" style="background:#E4F1EB;color:#3E7E63">✓ fait</span>':'<span class="dtag" style="background:'+e.bg+';color:'+e.c+'">'+e.l+'</span>')+
       '<span class="dtag" style="background:#fff;border:1px solid var(--bord);color:var(--encre-doux)">'+(TERR_NOM[c.territoire]||c.territoire)+'</span>'+
       (c.etage&&c.etage!=="—"?'<span class="dtag" style="background:#fff;border:1px solid var(--bord);color:var(--encre-doux)">étage '+c.etage+'</span>':'')+
       (c.critique?'<span class="dtag" style="background:#FBEFF3;color:#B05278">🎯 chemin critique</span>':'')+
@@ -582,7 +589,7 @@ function openDetail(id){
       '<span class="dtag" style="background:'+dc.bg+';color:'+dc.c+'">difficulté '+c.diff+'</span>'+
       (c.effort&&c.effort!=="—"?'<span class="dtag" style="background:#fff;border:1px solid var(--bord);color:var(--encre-doux)">⏱ '+c.effort+'</span>':'')+
     '</div>'+
-    '<div class="prog-detail"><div class="pl"><span>Avancement</span><b>'+c.progress+'%</b></div><div class="prog-bar"><i style="width:'+c.progress+'%;background:'+e.c+'"></i></div></div>'+
+    '<div class="prog-detail"><div class="pl"><span>Avancement</span><b>'+c.progress+'%</b></div><div class="prog-bar"><i style="width:'+c.progress+'%;background:'+(c.etat==="fait"?"#5BA88A":e.c)+'"></i></div></div>'+
     '<table class="resume">'+row("Responsable",c.responsable)+row("Vérifie",c.verifie)+row("Sécurise",c.securise)+
       row("Dernière action",dateFr(c.date_action))+row("Date-cible",c.date_cible?dateFr(c.date_cible):"—")+
       (c.date_completion?row("✅ Terminé le",dateFr(c.date_completion)):"")+
