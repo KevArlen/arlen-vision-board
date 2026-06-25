@@ -387,8 +387,8 @@ const CHANTIERS = [
     quoi:"Derniers réglages sur les questionnaires figés (une question reformulée, une question déplacée au pré-relevé).",avant:"Questionnaires figés en juin.",maintenant:"2 ajustements faits, attendent la re-validation de Viktor.",apres:"Viktor valide → permet la resync de la Table."},
 
   /* ---- Stack & Infra (Robert — à rebriefer) ---- */
-  {id:"robert_stack",titre:"Stack & couche données",territoire:"STACK",etage:"—",responsable:"Robert",verifie:"—",securise:"—",etat:"dormant",critique:false,goulot:false,date_action:"2026-05-16",date_cible:null,date_completion:null,canal:"#inst-robert",
-    quoi:"L'infrastructure data d'ARLEN (Supabase, structures de stockage, Stripe Connect).",avant:"Travail data layer démarré mi-mai.",maintenant:"Dormant — périmètre recoupé par le recâblage N1, à resynchroniser/rebriefer.",apres:"Rebrief sur la séparation Capture ≠ Engine avant relance."},
+  {id:"robert_stack",titre:"État des lieux de la couche données (ARL-T-023)",territoire:"STACK",etage:"—",responsable:"Robert",verifie:"—",securise:"—",etat:"bloque",critique:false,goulot:false,date_action:"2026-06-25",date_cible:null,date_completion:null,canal:"#inst-robert",
+    quoi:"Cartographier l'infrastructure data (tables Supabase, chaîne de capture, Counterparty Graph, Stripe Connect) et lister les manques.",avant:"Plan d'attaque en 4 parties rédigé et prêt.",maintenant:"Bloqué : Robert n'a jamais eu accès au repo — la personne responsable du data layer ne l'a jamais vu. C'est SON déblocage n°1.",apres:"Dès l'accès au repo (migrations + arlen.py + API capture) : état des lieux livré en 24-48 h, puis schéma data MVP (Stripe Connect, pré-session, signal court)."},
 
   /* ---- Conseil (Viktor, Deák, Arpad, Levi) ---- */
   {id:"viktor_pb4",titre:"Doctrine des noms de variables",territoire:"CONSEIL",etage:"—",responsable:"Viktor",verifie:"Kevin",securise:"—",etat:"en_cours",critique:true,goulot:false,date_action:"2026-06-24",date_cible:"2026-06-26",date_completion:null,canal:"#inst-viktor",
@@ -398,7 +398,11 @@ const CHANTIERS = [
   {id:"arpad_thematiques",titre:"Architecture des ASR thématiques",territoire:"CONSEIL",etage:"—",responsable:"Arpad",verifie:"—",securise:"—",etat:"fait",critique:false,goulot:false,date_action:"2026-06-25",date_cible:null,date_completion:"2026-06-25",canal:"#inst-arpad",
     quoi:"Règle doctrinale : le thème règle la profondeur de lecture, jamais la réalité observée.",avant:"Question ouverte.",maintenant:"Tranché et livré.",apres:"Sert de cadre au câblage thématique."},
   {id:"levi_archi",titre:"Architecture de mise en production",territoire:"CONSEIL",etage:"—",responsable:"Levi",verifie:"—",securise:"—",etat:"fait",critique:false,goulot:false,date_action:"2026-06-22",date_cible:null,date_completion:"2026-06-22",canal:"#inst-levi",
-    quoi:"Le plan d'organisation de la production (7 instances, 5 fonctions).",avant:"Organisation à définir.",maintenant:"Livrée et figée (carte de référence).",apres:"Levi peu sollicité depuis — disponible si besoin."}
+    quoi:"Le plan d'organisation de la production (7 instances, 5 fonctions).",avant:"Organisation à définir.",maintenant:"Livrée et figée (carte de référence).",apres:"Sert de carte de référence ; Levi enchaîne sur la sécu-by-design et le contrat payload."},
+  {id:"levi_secu_design",titre:"Sécurité de la Stack « by design »",territoire:"T5",etage:"—",responsable:"Levi",verifie:"Sec",securise:"Sec",etat:"en_file",critique:false,goulot:false,date_action:"2026-06-25",date_cible:null,date_completion:null,canal:"#inst-levi",
+    quoi:"Inscrire les règles de sécurité dès la conception de la base (zéro secret côté client, cloisonnement), pas en rustine.",avant:"Leçon tirée d'une alerte marché (Novo Nordisk).",maintenant:"Actif, non commencé — à produire avant la prod data réelle.",apres:"Spec (modèle de menace + règles) que Platform et Sec appliqueront."},
+  {id:"levi_payload",titre:"Contrat d'échange moteur ↔ capture",territoire:"T2",etage:"—",responsable:"Levi",verifie:"Engine + Platform",securise:"—",etat:"en_file",critique:false,goulot:false,date_action:"2026-06-25",date_cible:null,date_completion:null,canal:"#inst-levi",
+    quoi:"Figer le format des données qui passent entre la capture et le moteur (le « contrat payload »).",avant:"Champs minimum déjà gravés (type de session, thème, version signal…).",maintenant:"Imminent — se co-produit dès que le raccordement démarre.",apres:"Préalable au branchement moteur ↔ capture."}
 ];
 
 function loadData(){ return { meta:META, secteurs:SECTEURS, chantiers:CHANTIERS }; }
