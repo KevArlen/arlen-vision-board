@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>La Galaxie ARLEN — Poste de commande</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================================
+   LA GALAXIE ARLEN — Vision board / poste de commande · V1 (lecture seule)
+   Direction artistique validée Kevin : objets flottants dans un ciel blanc cassé,
+   pastel apaisé, full motion doux, zéro cliché spatial.
+   Architecture : DONNÉES (objet CHANTIERS, plus bas dans <script>) strictement
+   séparées du RENDU (fonctions render*). Phase 2 = remplacer loadData() par une
+   lecture Notion, sans toucher au rendu.
+   ========================================================================== */
+:root{
+  --ciel:#FBF9F5;            /* fond ciel blanc cassé (jamais blanc pur, jamais sombre) */
+  --encre:#3A3650;           /* texte principal, encre lilas-ardoise douce */
+  --encre-doux:#6E6A82;      /* texte secondaire */
+  --encre-tres-doux:#9C99AC; /* hints */
+  --carte:#FFFFFFEE;         /* surface carte, blanc voilé */
+  --bord:#EBE7F0;            /* bordures très douces */
+  /* couleurs secteurs (pastels validés) */
+  --c-T1:#A7C5EB; --c-T2:#C9BBEC; --c-T3:#AEDCC9; --c-T4:#F2D8A7; --c-T5:#F3B6C9; --c-GOV:#D8D6E0; --c-PROD:#BBD3E8;
+  /* états */
+  --e-encours:#5BA88A; --e-enfile:#E0A94E; --e-bloque:#D8745C; --e-fait:#6E8FC2; --e-reporte:#B4B0BF;
+  --ombre:0 18px 50px -28px rgba(80,70,120,.45);
+  --radius:32px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  color:var(--encre);
+  background:var(--ciel);
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+/* deux halos pastel diffus : lilas haut-gauche, rosé bas-droite, dérive lente */
+body::before,body::after{content:"";position:fixed;z-index:0;border-radius:50%;filter:blur(70px);pointer-events:none;opacity:.55}
+body::before{width:48vw;height:48vw;left:-10vw;top:-12vw;background:radial-gradient(circle at 50% 50%,#D9CCF2,transparent 70%);animation:drift1 26s ease-in-out infinite}
+body::after{width:46vw;height:46vw;right:-12vw;bottom:-14vw;background:radial-gradient(circle at 50% 50%,#F7CEDC,transparent 70%);animation:drift2 31s ease-in-out infinite}
+@keyframes drift1{0%,100%{transform:translate(0,0)}50%{transform:translate(4vw,3vh)}}
+@keyframes drift2{0%,100%{transform:translate(0,0)}50%{transform:translate(-3vw,-3vh)}}
+
+.wrap{position:relative;z-index:1;max-width:1160px;margin:0 auto;padding:26px 22px 80px}
+
+/* ---- en-tête / bandeau de pilotage ---- */
+header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px 26px;margin-bottom:8px}
+.titre h1{font-family:'Fraunces',serif;font-weight:500;font-size:30px;margin:0;letter-spacing:.2px}
+.titre p{margin:3px 0 0;color:var(--encre-doux);font-size:14px}
+.cap{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--bord);border-radius:30px;padding:7px 15px;font-size:13.5px;box-shadow:var(--ombre)}
+.cap b{font-weight:600}
+.cap .fleche{color:var(--c-T5)}
+.stats{display:flex;gap:10px;margin-left:auto}
+.pill{display:inline-flex;align-items:center;gap:7px;border-radius:18px;padding:6px 13px;font-size:12.5px;font-weight:500;border:1px solid var(--bord);background:#fff;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.pill:hover{transform:translateY(-2px);box-shadow:var(--ombre)}
+.pill .dot{width:8px;height:8px;border-radius:50%}
+.pill.b{color:#9a4e3a}.pill.b .dot{background:var(--e-bloque)}
+.pill.k{color:#8a6420}.pill.k .dot{background:var(--e-enfile)}
+.frais{font-size:12px;color:var(--encre-tres-doux);align-self:center}
+
+/* ---- onglets de vue + flèches de swipe ---- */
+.nav{display:flex;align-items:center;gap:8px;margin:18px 0 22px}
+.tabs{display:flex;gap:4px;background:#fff;border:1px solid var(--bord);border-radius:22px;padding:4px;box-shadow:var(--ombre)}
+.tab{border:0;background:transparent;font-family:inherit;font-size:14px;color:var(--encre-doux);padding:8px 18px;border-radius:18px;cursor:pointer;transition:all .25s;display:inline-flex;align-items:center;gap:7px}
+.tab.on{background:var(--encre);color:#fff}
+.arw{margin-left:auto;display:flex;gap:6px}
+.arw button{width:38px;height:38px;border-radius:50%;border:1px solid var(--bord);background:#fff;cursor:pointer;font-size:17px;color:var(--encre-doux);transition:transform .2s,box-shadow .2s}
+.arw button:hover{transform:translateY(-2px);box-shadow:var(--ombre)}
+
+.view{display:none;animation:fadein .5s ease}
+.view.on{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ---- vue galaxie : objets flottants ---- */
+.galtoolbar{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+.seg{display:inline-flex;background:#fff;border:1px solid var(--bord);border-radius:16px;padding:3px}
+.seg button{border:0;background:transparent;font-family:inherit;font-size:12.5px;color:var(--encre-doux);padding:6px 13px;border-radius:13px;cursor:pointer}
+.seg button.on{background:var(--encre);color:#fff}
+.galaxie{display:flex;flex-wrap:wrap;justify-content:center;gap:30px 38px;padding:26px 4px 10px}
+.secteur{position:relative;width:248px;border-radius:var(--radius);padding:18px 18px 14px;background:var(--carte);border:1px solid #fff;box-shadow:var(--ombre);backdrop-filter:blur(4px);animation:flotte var(--dur,7s) ease-in-out var(--del,0s) infinite}
+.secteur::before{content:"";position:absolute;inset:0;border-radius:var(--radius);background:var(--teinte);opacity:.34;z-index:-1}
+.secteur::after{content:"";position:absolute;inset:0;border-radius:var(--radius);box-shadow:inset 0 0 0 1.5px #ffffffaa;pointer-events:none}
+/* tailles & décalages variables → moins aligné, plus d'air */
+.secteur:nth-child(3n+1){width:266px;margin-top:0}
+.secteur:nth-child(3n+2){width:236px;margin-top:40px}
+.secteur:nth-child(3n+3){width:256px;margin-top:16px}
+.secteur:nth-child(4n+2){transform:rotate(-1.2deg)}
+.secteur:nth-child(4n){transform:rotate(1deg)}
+@keyframes flotte{0%,100%{translate:0 0}50%{translate:0 -14px}}
+.sec-tete{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.sec-nom{font-family:'Fraunces',serif;font-weight:600;font-size:17px}
+.sec-terr{font-size:11px;color:var(--encre-doux);background:#ffffffcc;border-radius:10px;padding:2px 8px}
+.sec-insts{font-size:11.5px;color:var(--encre-doux);margin:0 0 10px}
+.chips{display:flex;flex-direction:column;gap:6px}
+.chip{display:flex;align-items:center;gap:9px;background:#ffffffe0;border:1px solid #ffffff;border-radius:15px;padding:7px 11px;cursor:pointer;font-size:12.5px;transition:transform .18s,box-shadow .18s;text-align:left;width:100%}
+.chip:hover{transform:translateX(3px);box-shadow:0 8px 22px -16px rgba(80,70,120,.6)}
+.chip .edot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.chip .ctitre{flex:1;line-height:1.25}
+.chip .cstar{font-size:11px;opacity:.85}
+.edot.s-en_cours{background:var(--e-encours)} .edot.s-en_file{background:var(--e-enfile)}
+.edot.s-bloque{background:var(--e-bloque);animation:battement 1.8s ease-in-out infinite}
+.edot.s-fait{background:var(--e-fait)} .edot.s-reporte{background:var(--e-reporte)}
+@keyframes battement{0%,100%{box-shadow:0 0 0 0 rgba(216,116,92,.55)}50%{box-shadow:0 0 0 5px rgba(216,116,92,0)}}
+
+/* ---- chemin critique : ruban à flux lumineux ---- */
+.critique{margin:30px auto 0;max-width:980px;background:var(--carte);border:1px solid #fff;border-radius:26px;box-shadow:var(--ombre);padding:16px 20px 20px}
+.critique h3{font-family:'Fraunces',serif;font-weight:500;font-size:15px;margin:0 0 2px;display:flex;align-items:center;gap:8px}
+.critique .sub{font-size:11.5px;color:var(--encre-doux);margin:0 0 6px}
+.cc-line{position:relative;display:flex;align-items:center;gap:6px;overflow-x:auto;padding:10px 2px 4px}
+.cc-node{flex:0 0 auto;max-width:150px;background:#fff;border:1px solid var(--bord);border-radius:18px;padding:9px 13px;cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative}
+.cc-node:hover{transform:translateY(-3px);box-shadow:var(--ombre)}
+.cc-node .t{font-size:12px;font-weight:500;line-height:1.2}
+.cc-node .e{font-size:10.5px;color:var(--encre-doux);margin-top:2px;display:flex;align-items:center;gap:5px}
+.cc-node.goulot{border-color:var(--e-encours);animation:pulseGoulot 2.2s ease-in-out infinite}
+@keyframes pulseGoulot{0%,100%{box-shadow:0 0 0 0 rgba(91,168,138,.5)}50%{box-shadow:0 0 0 8px rgba(91,168,138,0)}}
+.cc-flux{flex:0 0 30px;height:3px;border-radius:3px;background:linear-gradient(90deg,#E6DEF5,#CFE3D8,#E6DEF5);background-size:200% 100%;animation:flux 2.4s linear infinite;align-self:center}
+@keyframes flux{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.cc-node.cap{background:linear-gradient(180deg,#fff,#FBEFF3);border-color:var(--c-T5)}
+
+/* ---- vue liste ---- */
+.filtres{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.filtres select{font-family:inherit;font-size:13px;color:var(--encre);background:#fff;border:1px solid var(--bord);border-radius:14px;padding:8px 12px;cursor:pointer}
+.filtres label{font-size:11.5px;color:var(--encre-tres-doux);margin-right:-4px}
+.compte{margin-left:auto;font-size:12.5px;color:var(--encre-doux)}
+.liste{display:flex;flex-direction:column;gap:8px}
+.ligne{display:grid;grid-template-columns:14px 1.7fr .8fr .9fr .8fr;gap:14px;align-items:center;background:var(--carte);border:1px solid #fff;border-radius:18px;padding:13px 18px;cursor:pointer;box-shadow:0 10px 30px -26px rgba(80,70,120,.6);transition:transform .18s,box-shadow .18s}
+.ligne:hover{transform:translateY(-2px);box-shadow:var(--ombre)}
+.ligne .lt{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px}
+.ligne .meta{font-size:12px;color:var(--encre-doux)}
+.ligne .etat-tag{font-size:11.5px;font-weight:500;padding:3px 11px;border-radius:12px;justify-self:start}
+.barre{width:10px;height:10px;border-radius:50%}
+@media(max-width:720px){.ligne{grid-template-columns:12px 1fr;gap:8px}.ligne .meta,.ligne .etat-tag{display:none}}
+
+/* ---- vue calendrier ---- */
+.calbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.cal{display:flex;gap:16px;overflow-x:auto;padding-bottom:10px}
+.calcol{flex:0 0 200px;min-width:200px}
+.calcol .jour{font-family:'Fraunces',serif;font-size:14px;font-weight:500;color:var(--encre);padding:6px 4px;border-bottom:2px solid var(--bord);margin-bottom:10px;position:sticky;top:0}
+.calcard{background:var(--carte);border:1px solid #fff;border-radius:16px;padding:11px 13px;margin-bottom:9px;cursor:pointer;box-shadow:0 10px 26px -24px rgba(80,70,120,.6);transition:transform .18s,box-shadow .18s}
+.calcard:hover{transform:translateY(-2px);box-shadow:var(--ombre)}
+.calcard .ct{font-size:12.5px;font-weight:500;display:flex;gap:7px;align-items:flex-start;line-height:1.3}
+.calcard .cm{font-size:11px;color:var(--encre-doux);margin-top:4px}
+
+/* ---- carte de détail (overlay) ---- */
+.scrim{position:fixed;inset:0;z-index:50;background:rgba(58,54,80,.28);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:22px;opacity:0;pointer-events:none;transition:opacity .3s}
+.scrim.on{opacity:1;pointer-events:auto}
+.detail{width:420px;max-width:100%;background:#fff;border-radius:26px;box-shadow:0 40px 90px -30px rgba(58,54,80,.6);padding:24px 26px;transform:scale(.9) translateY(14px);opacity:0;transition:transform .32s cubic-bezier(.2,.9,.3,1.2),opacity .3s}
+.scrim.on .detail{transform:none;opacity:1}
+.detail .dtete{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.detail h2{font-family:'Fraunces',serif;font-weight:500;font-size:20px;margin:0;line-height:1.25}
+.detail .fermer{flex:0 0 auto;width:34px;height:34px;border-radius:50%;border:1px solid var(--bord);background:#fff;cursor:pointer;font-size:17px;color:var(--encre-doux)}
+.detail .dtags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+.dtag{font-size:11.5px;font-weight:500;padding:3px 11px;border-radius:12px}
+.detail table{width:100%;border-collapse:collapse}
+.detail td{padding:7px 0;font-size:13.5px;border-top:1px solid var(--bord)}
+.detail td.k{color:var(--encre-doux);width:42%}
+.detail td.v{text-align:right;font-weight:500}
+.detail .note{margin-top:14px;background:#FBF9F5;border-radius:14px;padding:12px 14px;font-size:13px;color:var(--encre-doux);line-height:1.55}
+.detail .hist{margin-top:12px;font-size:11.5px;color:var(--encre-tres-doux)}
+.detail .canal{color:var(--e-fait);font-weight:500}
+
+.legende{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-top:26px;font-size:11.5px;color:var(--encre-doux)}
+.legende span{display:inline-flex;align-items:center;gap:6px}
+.legende i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.pied{text-align:center;margin-top:30px;font-size:11px;color:var(--encre-tres-doux)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="titre">
+      <h1>La Galaxie ARLEN</h1>
+      <p>Poste de commande — où on est · où on va · qui fait quoi</p>
+    </div>
+    <div class="cap">Cap&nbsp;: <b>PME&nbsp;T0</b> <span class="fleche">→</span> <b>ASR</b></div>
+    <div class="stats">
+      <button class="pill b" id="pill-bloc"><span class="dot"></span><span id="n-bloc">0</span> bloqués</button>
+      <button class="pill k" id="pill-file"><span class="dot"></span><span id="n-file">0</span> en file</button>
+    </div>
+  </header>
+  <div class="frais" id="frais"></div>
+
+  <div class="nav">
+    <div class="tabs" id="tabs">
+      <button class="tab on" data-v="galaxie">✦ Galaxie</button>
+      <button class="tab" data-v="liste">☰ Liste</button>
+      <button class="tab" data-v="calendrier">◷ Calendrier</button>
+    </div>
+    <div class="arw"><button id="prev" aria-label="vue précédente">‹</button><button id="next" aria-label="vue suivante">›</button></div>
+  </div>
+
+  <!-- ===================== VUE GALAXIE ===================== -->
+  <section class="view on" id="v-galaxie">
+    <div class="galtoolbar">
+      <div class="seg" id="grp">
+        <button class="on" data-g="territoire">par territoire</button>
+        <button data-g="instance">par instance</button>
+      </div>
+    </div>
+    <div class="galaxie" id="galaxie"></div>
+
+    <div class="critique">
+      <h3>🎯&nbsp;Le chemin critique vers l'ASR</h3>
+      <p class="sub">Kata → Engine → Engine → ASR. Tout le reste tourne en parallèle.</p>
+      <div class="cc-line" id="cc-line"></div>
+    </div>
+  </section>
+
+  <!-- ===================== VUE LISTE ===================== -->
+  <section class="view" id="v-liste">
+    <div class="filtres">
+      <label>instance</label><select id="f-inst"></select>
+      <label>état</label><select id="f-etat"></select>
+      <label>territoire</label><select id="f-terr"></select>
+      <label>tri</label><select id="f-tri">
+        <option value="action">date d'action ↓</option>
+        <option value="cible">date-cible ↑</option>
+        <option value="titre">titre A→Z</option>
+        <option value="etat">état</option>
+      </select>
+      <span class="compte" id="compte"></span>
+    </div>
+    <div class="liste" id="liste"></div>
+  </section>
+
+  <!-- ===================== VUE CALENDRIER ===================== -->
+  <section class="view" id="v-calendrier">
+    <div class="calbar">
+      <div class="seg" id="calmode">
+        <button class="on" data-m="action">par date d'action</button>
+        <button data-m="cible">par date-cible</button>
+      </div>
+      <span class="compte" id="cal-compte"></span>
+    </div>
+    <div class="cal" id="cal"></div>
+  </section>
+
+  <div class="legende">
+    <span><i style="background:var(--e-en_cours,#5BA88A)"></i>en cours</span>
+    <span><i style="background:#E0A94E"></i>en file</span>
+    <span><i style="background:#D8745C"></i>bloqué</span>
+    <span><i style="background:#6E8FC2"></i>fait</span>
+    <span><i style="background:#B4B0BF"></i>reporté</span>
+    <span>🎯 sur le chemin critique</span>
+  </div>
+  <div class="pied" id="pied"></div>
+
+</div>
+
+<div class="scrim" id="scrim"><div class="detail" id="detail" role="dialog" aria-modal="true"></div></div>
+
+<script>
+/* ============================================================================
+   ░░  DONNÉES  ░░  — source unique, éditée à la main par Build + Lead au fil de
+   l'eau (D42), jusqu'à la phase 2 (synchro Notion). Reprend les 19 chantiers de
+   la Galaxie Notion 3893cd9c-8f8f-8154-b7ec-fe40f0cf8091.
+   Schéma d'un chantier (propre & extensible — la phase 2 remplira la même forme) :
+     id            identifiant stable (slug)
+     titre         libellé
+     territoire    T1 | T2 | T3 | T4 | T5 | GOV | PROD
+     etage         "1".."5" ou "—"  (D23 : 1 clés · 2 Table · 3 mapping · 4 config · 5 moteur)
+     responsable   instance qui porte
+     verifie       instance qui vérifie (D15)
+     securise      instance qui sécurise, ou "—"
+     etat          en_cours | en_file | bloque | fait | reporte
+     critique      true = sur le chemin critique 🎯
+     goulot        true = nœud-goulot actuel (pulse sur le chemin critique)
+     date_action   AAAA-MM-JJ — dernière action (placeholder éditable)
+     date_cible    AAAA-MM-JJ | null — échéance visée (placeholder éditable)
+     note          contexte court
+     canal         canal Slack du chantier
+   ========================================================================== */
+
+const META = {
+  version: "V1",
+  updated_at: "2026-06-25",
+  cap: "PME T0 → ASR",
+  /* ordre du chemin critique (ids), colonne vertébrale vers l'ASR */
+  chemin_critique: ["etage1","reserialisation","resync_table","compositions","t1b","t2_moteur","asr"]
+};
+
+/* 7 territoires (secteurs flottants) + leur teinte pastel */
+const SECTEURS = [
+  {id:"T1",  nom:"Core",       teinte:"var(--c-T1)"},
+  {id:"T2",  nom:"Moteur",     teinte:"var(--c-T2)"},
+  {id:"T3",  nom:"Capture",    teinte:"var(--c-T3)"},
+  {id:"T4",  nom:"Protéger",   teinte:"var(--c-T4)"},
+  {id:"T5",  nom:"Sécurité",   teinte:"var(--c-T5)"},
+  {id:"GOV", nom:"Gouvernance",teinte:"var(--c-GOV)"},
+  {id:"PROD",nom:"Production",  teinte:"var(--c-PROD)"}
+];
+
+const CHANTIERS = [
+  {id:"etage1", titre:"Étage 1 — hub clés tous-profils", territoire:"T1", etage:"1", responsable:"Kata", verifie:"Engine", securise:"—", etat:"fait", critique:true, goulot:false, date_action:"2026-06-24", date_cible:null, note:"Complet + D40 appliqué + re-sérialisé (107 entrées).", canal:"#thème-data"},
+  {id:"reserialisation", titre:"Re-sérialisation hub post-D40", territoire:"T1", etage:"1→2", responsable:"Engine", verifie:"align_check", securise:"—", etat:"en_cours", critique:true, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-25", note:"Mergé (5b3e08d), INV3 vert. Gate A franchi 3✅.", canal:"#arl-engine"},
+  {id:"resync_table", titre:"Resync Table N1 (O3)", territoire:"T2", etage:"2", responsable:"Kata", verifie:"Engine", securise:"—", etat:"en_cours", critique:true, goulot:true, date_action:"2026-06-25", date_cible:"2026-06-27", note:"Étage 2 lancé — grammaire/poids/polarité. LE goulot : débloque T1.b.", canal:"#thème-data"},
+  {id:"compositions", titre:"Compositions par profil + keys_index", territoire:"T2", etage:"2", responsable:"Kata", verifie:"Engine", securise:"—", etat:"en_cours", critique:true, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-27", note:"Passe INV2-scope / INV4 au vert.", canal:"#thème-data"},
+  {id:"t1b", titre:"T1.b — dérivation Registry→scoring_config", territoire:"T1", etage:"4", responsable:"Engine", verifie:"Verif", securise:"Sec", etat:"en_file", critique:true, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-29", note:"Attend l'étage 2. Active align_check bloquant → boucle T1.", canal:"#arl-engine"},
+  {id:"t2_moteur", titre:"T2 — recâblage moteur (theme_id)", territoire:"T2", etage:"5", responsable:"Engine", verifie:"Verif", securise:"Sec", etat:"bloque", critique:true, goulot:false, date_action:"2026-06-24", date_cible:"2026-07-02", note:"Bloqué par T1 (D2). Le chantier qui produit l'ASR.", canal:"#arl-engine"},
+  {id:"asr", titre:"ASR PME T0 bout-en-bout", territoire:"T2", etage:"5", responsable:"Engine", verifie:"Verif", securise:"Sec", etat:"bloque", critique:true, goulot:false, date_action:"2026-06-24", date_cible:"2026-07-04", note:"LE CAP (D8).", canal:"#arl-engine"},
+  {id:"refresh_gov", titre:"Refresh GOV-000à009", territoire:"GOV", etage:"—", responsable:"Build", verifie:"Lead", securise:"—", etat:"en_cours", critique:false, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-30", note:"Phase A gap-analysis livrée (6 HAUTES). Phase B drafts attend GO.", canal:"#arl-build"},
+  {id:"rangement_gov", titre:"Rangement dossier gouvernance", territoire:"GOV", etage:"—", responsable:"Lilla", verifie:"Lead", securise:"—", etat:"en_cours", critique:false, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-28", note:"Phase B en exécution.", canal:"#arl-build"},
+  {id:"tour_instances", titre:"Tour des instances de coding", territoire:"GOV", etage:"—", responsable:"Build", verifie:"Lead", securise:"—", etat:"en_cours", critique:false, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-25", note:"Synthèse des 7 remontée à Lead.", canal:"#arl-build"},
+  {id:"sec_durcissements", titre:"Durcissements SEC-T01/02/03", territoire:"T5", etage:"—", responsable:"Sec", verifie:"—", securise:"Sec", etat:"en_file", critique:false, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-26", note:".dockerignore (re-fix **/.env*) + provisioning backup.", canal:"#arl-sec"},
+  {id:"backup_daily", titre:"Auto-backup quotidien", territoire:"T4", etage:"—", responsable:"Keeper", verifie:"Sec", securise:"Sec", etat:"en_file", critique:false, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-27", note:"Scope workflow OK (D32). Attend GO Sec bypassrls.", canal:"#arl-keeper"},
+  {id:"audit_alignblock", titre:"Audit gate align_check bloquant", territoire:"T5", etage:"—", responsable:"Verif", verifie:"—", securise:"Sec", etat:"en_file", critique:false, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-29", note:"À préparer pour T1.b (D15). Harnais mutation-testing prêt.", canal:"#arl-verif"},
+  {id:"file_merges", titre:"File de merges Ops", territoire:"PROD", etage:"—", responsable:"Ops", verifie:"—", securise:"Sec", etat:"en_file", critique:false, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-26", note:"Gate A mergé. Reste re-gate SEC-T01 + backup-daily.", canal:"#arl-ops"},
+  {id:"mise_en_ligne", titre:"Mise en ligne protocoles N1 + passage N2", territoire:"PROD", etage:"—", responsable:"Platform", verifie:"Verif", securise:"—", etat:"bloque", critique:false, goulot:false, date_action:"2026-06-24", date_cible:"2026-07-05", note:"ANGLE MORT — versions figées pas en prod ; routages/UI-UX (N2) pilotés par personne.", canal:"#arl-platform"},
+  {id:"capture_thematique", titre:"Capture thématique", territoire:"T3", etage:"—", responsable:"Platform", verifie:"Verif", securise:"—", etat:"reporte", critique:false, goulot:false, date_action:"2026-06-23", date_cible:null, note:"Track indépendant (D6), après l'ASR socle.", canal:"#arl-platform"},
+  {id:"pb5_l3", titre:"PB-5 — palier L3 Access_Mode", territoire:"T2", etage:"—", responsable:"Mika Ops / Engine", verifie:"—", securise:"—", etat:"en_file", critique:false, goulot:false, date_action:"2026-06-24", date_cible:null, note:"Hors hub, côté code. Dev déjà tranché (17 juin), à séquencer.", canal:"#arl-ops"},
+  {id:"vig1", titre:"VIG-1 — Headcount_Bracket câblage", territoire:"T1", etage:"5", responsable:"Engine", verifie:"—", securise:"—", etat:"en_file", critique:true, goulot:false, date_action:"2026-06-24", date_cible:"2026-06-29", note:"Vérif au câblage T1.b/T2 : chercher la variable depuis le pré-relevé.", canal:"#arl-engine"},
+  {id:"galaxie", titre:"Galaxie / poste de commande", territoire:"GOV", etage:"—", responsable:"Lead + Build", verifie:"—", securise:"—", etat:"en_cours", critique:false, goulot:false, date_action:"2026-06-25", date_cible:"2026-06-25", note:"Cette vue — maintenue au fil de l'eau (D42).", canal:"#arl-build"}
+];
+
+/* fonction-source isolée : la phase 2 (Notion) ne remplace QUE ceci. */
+function loadData(){ return { meta: META, secteurs: SECTEURS, chantiers: CHANTIERS }; }
+
+/* ============================================================================
+   ░░  RENDU  ░░  — ne connaît que la forme retournée par loadData().
+   ========================================================================== */
+const ETATS = {
+  en_cours:{l:"en cours",c:"#5BA88A",bg:"#E4F1EB"},
+  en_file:{l:"en file",c:"#E0A94E",bg:"#FBF0DD"},
+  bloque:{l:"bloqué",c:"#D8745C",bg:"#FBE6DF"},
+  fait:{l:"fait",c:"#6E8FC2",bg:"#E6EDF7"},
+  reporte:{l:"reporté",c:"#9C99AC",bg:"#EFEEF2"}
+};
+const TERR_NOM = {T1:"T1 · Core",T2:"T2 · Moteur",T3:"T3 · Capture",T4:"T4 · Protéger",T5:"T5 · Sécurité",GOV:"GOV",PROD:"PROD"};
+const FR_MOIS = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+const DATA = loadData();
+const byId = id => DATA.chantiers.find(c=>c.id===id);
+function dateFr(iso){ if(!iso) return "—"; const [y,m,d]=iso.split("-").map(Number); return d+" "+FR_MOIS[m-1]; }
+
+/* ---------- bandeau ---------- */
+function renderBandeau(){
+  const cs = DATA.chantiers;
+  document.getElementById("n-bloc").textContent = cs.filter(c=>c.etat==="bloque").length;
+  document.getElementById("n-file").textContent = cs.filter(c=>c.etat==="en_file").length;
+  document.getElementById("frais").textContent = "à jour le "+dateFr(DATA.meta.updated_at)+" · "+cs.length+" chantiers · "+DATA.meta.version+" (données en dur)";
+  document.getElementById("pied").textContent = "La Galaxie ARLEN · "+DATA.meta.version+" · lecture seule · maintenue au fil de l'eau par Build + Lead (D42).";
+}
+
+/* ---------- vue galaxie ---------- */
+let groupBy = "territoire";
+function renderGalaxie(){
+  const host = document.getElementById("galaxie"); host.innerHTML="";
+  let groupes;
+  if(groupBy==="territoire"){
+    groupes = DATA.secteurs.map(s=>({cle:s.id, nom:s.nom, terr:s.id, teinte:s.teinte,
+      items:DATA.chantiers.filter(c=>c.territoire===s.id)})).filter(g=>g.items.length);
+  } else {
+    const noms=[...new Set(DATA.chantiers.map(c=>c.responsable))];
+    const teintes=["var(--c-T1)","var(--c-T2)","var(--c-T3)","var(--c-T4)","var(--c-T5)","var(--c-GOV)","var(--c-PROD)"];
+    groupes = noms.map((n,i)=>({cle:n, nom:n, terr:"", teinte:teintes[i%teintes.length],
+      items:DATA.chantiers.filter(c=>c.responsable===n)}));
+  }
+  groupes.forEach((g,i)=>{
+    const el=document.createElement("div"); el.className="secteur";
+    el.style.setProperty("--teinte",g.teinte);
+    el.style.setProperty("--dur",(6.4+(i%4)*0.7)+"s");
+    el.style.setProperty("--del",(-(i*0.9))+"s");
+    const insts = groupBy==="territoire" ? [...new Set(g.items.map(c=>c.responsable))].join(" · ") : g.items.length+" chantiers";
+    el.innerHTML =
+      '<div class="sec-tete"><span class="sec-nom">'+g.nom+'</span>'+(g.terr?'<span class="sec-terr">'+g.terr+'</span>':'')+'</div>'+
+      '<p class="sec-insts">'+insts+'</p><div class="chips">'+
+      g.items.map(c=>'<button class="chip" data-id="'+c.id+'"><span class="edot s-'+c.etat+'"></span>'+
+        '<span class="ctitre">'+c.titre+'</span>'+(c.critique?'<span class="cstar">🎯</span>':'')+'</button>').join('')+
+      '</div>';
+    host.appendChild(el);
+  });
+  renderCritique();
+}
+
+function renderCritique(){
+  const host=document.getElementById("cc-line"); host.innerHTML="";
+  DATA.meta.chemin_critique.forEach((id,i)=>{
+    const c=byId(id); if(!c) return;
+    if(i>0){ const f=document.createElement("div"); f.className="cc-flux"; host.appendChild(f); }
+    const n=document.createElement("button");
+    n.className="cc-node"+(c.goulot?" goulot":"")+(id==="asr"?" cap":"");
+    n.dataset.id=id;
+    n.innerHTML='<div class="t">'+c.titre.split("—")[0].split("(")[0].trim()+'</div>'+
+      '<div class="e"><span class="edot s-'+c.etat+'" style="width:8px;height:8px;border-radius:50%"></span>'+ETATS[c.etat].l+(c.goulot?' · goulot':'')+'</div>';
+    host.appendChild(n);
+  });
+}
+
+/* ---------- vue liste ---------- */
+function fillFiltres(){
+  const insts=[...new Set(DATA.chantiers.map(c=>c.responsable))].sort();
+  const terrs=[...new Set(DATA.chantiers.map(c=>c.territoire))];
+  const opt=(v,l)=>'<option value="'+v+'">'+l+'</option>';
+  document.getElementById("f-inst").innerHTML=opt("","toutes")+insts.map(i=>opt(i,i)).join("");
+  document.getElementById("f-etat").innerHTML=opt("","tous")+Object.keys(ETATS).map(e=>opt(e,ETATS[e].l)).join("");
+  document.getElementById("f-terr").innerHTML=opt("","tous")+terrs.map(t=>opt(t,TERR_NOM[t]||t)).join("");
+}
+function renderListe(){
+  const fi=document.getElementById("f-inst").value, fe=document.getElementById("f-etat").value,
+        ft=document.getElementById("f-terr").value, tr=document.getElementById("f-tri").value;
+  let rows=DATA.chantiers.filter(c=>(!fi||c.responsable===fi)&&(!fe||c.etat===fe)&&(!ft||c.territoire===ft));
+  const ordreEtat={bloque:0,en_cours:1,en_file:2,reporte:3,fait:4};
+  rows.sort((a,b)=>{
+    if(tr==="titre") return a.titre.localeCompare(b.titre,"fr");
+    if(tr==="etat") return ordreEtat[a.etat]-ordreEtat[b.etat];
+    if(tr==="cible") return (a.date_cible||"9999").localeCompare(b.date_cible||"9999");
+    return (b.date_action||"").localeCompare(a.date_action||"");
+  });
+  const host=document.getElementById("liste"); host.innerHTML="";
+  rows.forEach(c=>{
+    const el=document.createElement("div"); el.className="ligne"; el.dataset.id=c.id;
+    el.innerHTML='<span class="barre" style="background:'+ETATS[c.etat].c+'"></span>'+
+      '<span class="lt">'+c.titre+(c.critique?' <span style="font-size:11px">🎯</span>':'')+'</span>'+
+      '<span class="meta">'+c.responsable+'</span>'+
+      '<span class="meta">'+(TERR_NOM[c.territoire]||c.territoire)+' · acté '+dateFr(c.date_action)+'</span>'+
+      '<span class="etat-tag" style="background:'+ETATS[c.etat].bg+';color:'+ETATS[c.etat].c+'">'+ETATS[c.etat].l+'</span>';
+    host.appendChild(el);
+  });
+  document.getElementById("compte").textContent=rows.length+" chantier"+(rows.length>1?"s":"");
+}
+
+/* ---------- vue calendrier ---------- */
+let calMode="action";
+function renderCalendrier(){
+  const host=document.getElementById("cal"); host.innerHTML="";
+  const champ = calMode==="action" ? "date_action" : "date_cible";
+  const items=DATA.chantiers.filter(c=>c[champ]);
+  const jours=[...new Set(items.map(c=>c[champ]))].sort();
+  jours.forEach(j=>{
+    const col=document.createElement("div"); col.className="calcol";
+    const liste=items.filter(c=>c[champ]===j);
+    col.innerHTML='<div class="jour">'+dateFr(j)+'</div>'+liste.map(c=>
+      '<div class="calcard" data-id="'+c.id+'"><div class="ct"><span class="edot s-'+c.etat+'" style="width:9px;height:9px;border-radius:50%;margin-top:3px"></span>'+
+      c.titre+(c.critique?' 🎯':'')+'</div><div class="cm">'+c.responsable+' · '+(TERR_NOM[c.territoire]||c.territoire)+'</div></div>').join("");
+    host.appendChild(col);
+  });
+  document.getElementById("cal-compte").textContent=items.length+" daté"+(items.length>1?"s":"")+(calMode==="cible"?" (échéance)":"");
+}
+
+/* ---------- carte de détail ---------- */
+function openDetail(id){
+  const c=byId(id); if(!c) return;
+  const e=ETATS[c.etat];
+  const row=(k,v)=>v&&v!=="—"?'<tr><td class="k">'+k+'</td><td class="v">'+v+'</td></tr>':'';
+  document.getElementById("detail").innerHTML=
+    '<div class="dtete"><h2>'+c.titre+'</h2><button class="fermer" id="x" aria-label="fermer">✕</button></div>'+
+    '<div class="dtags">'+
+      '<span class="dtag" style="background:'+e.bg+';color:'+e.c+'">'+e.l+'</span>'+
+      '<span class="dtag" style="background:#fff;border:1px solid var(--bord);color:var(--encre-doux)">'+(TERR_NOM[c.territoire]||c.territoire)+'</span>'+
+      (c.etage!=="—"?'<span class="dtag" style="background:#fff;border:1px solid var(--bord);color:var(--encre-doux)">étage '+c.etage+'</span>':'')+
+      (c.critique?'<span class="dtag" style="background:#FBEFF3;color:#B05278">🎯 chemin critique</span>':'')+
+      (c.goulot?'<span class="dtag" style="background:#E4F1EB;color:#3E7E63">goulot actuel</span>':'')+
+    '</div>'+
+    '<table>'+row("Responsable",c.responsable)+row("Vérifie",c.verifie)+row("Sécurise",c.securise)+
+      row("Dernière action",dateFr(c.date_action))+row("Date-cible",c.date_cible?dateFr(c.date_cible):"—")+
+      '<tr><td class="k">Canal</td><td class="v canal">'+c.canal+'</td></tr></table>'+
+    '<div class="note">'+c.note+'</div>'+
+    '<div class="hist">Historique des actions — disponible en phase 2 (synchro Notion).</div>';
+  document.getElementById("scrim").classList.add("on");
+  document.getElementById("x").onclick=closeDetail;
+}
+function closeDetail(){ document.getElementById("scrim").classList.remove("on"); }
+
+/* ---------- navigation : onglets + flèches + swipe ---------- */
+const VUES=["galaxie","liste","calendrier"];
+let vue=0;
+function setVue(i){
+  vue=(i+VUES.length)%VUES.length; const nom=VUES[vue];
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.v===nom));
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
+  document.getElementById("v-"+nom).classList.add("on");
+  if(nom==="liste")renderListe(); if(nom==="calendrier")renderCalendrier();
+}
+
+/* ---------- câblage des événements ---------- */
+function wire(){
+  document.getElementById("tabs").onclick=e=>{const t=e.target.closest(".tab"); if(t)setVue(VUES.indexOf(t.dataset.v));};
+  document.getElementById("prev").onclick=()=>setVue(vue-1);
+  document.getElementById("next").onclick=()=>setVue(vue+1);
+  document.getElementById("grp").onclick=e=>{const b=e.target.closest("button"); if(!b)return;
+    groupBy=b.dataset.g; document.querySelectorAll("#grp button").forEach(x=>x.classList.toggle("on",x===b)); renderGalaxie();};
+  document.getElementById("calmode").onclick=e=>{const b=e.target.closest("button"); if(!b)return;
+    calMode=b.dataset.m; document.querySelectorAll("#calmode button").forEach(x=>x.classList.toggle("on",x===b)); renderCalendrier();};
+  ["f-inst","f-etat","f-terr","f-tri"].forEach(id=>document.getElementById(id).onchange=renderListe);
+  /* clic sur n'importe quel élément porteur de data-id → carte détail */
+  document.body.addEventListener("click",e=>{const el=e.target.closest("[data-id]"); if(el&&!e.target.closest(".scrim"))openDetail(el.dataset.id);});
+  /* filtres rapides du bandeau */
+  document.getElementById("pill-bloc").onclick=()=>{setVue(1);document.getElementById("f-etat").value="bloque";renderListe();};
+  document.getElementById("pill-file").onclick=()=>{setVue(1);document.getElementById("f-etat").value="en_file";renderListe();};
+  /* scrim : clic fond + Échap ferment */
+  document.getElementById("scrim").addEventListener("click",e=>{if(e.target.id==="scrim")closeDetail();});
+  document.addEventListener("keydown",e=>{
+    if(e.key==="Escape")closeDetail();
+    else if(e.key==="ArrowRight"&&!document.getElementById("scrim").classList.contains("on"))setVue(vue+1);
+    else if(e.key==="ArrowLeft"&&!document.getElementById("scrim").classList.contains("on"))setVue(vue-1);
+  });
+  /* swipe tactile entre vues */
+  let x0=null; const m=document.querySelector(".wrap");
+  m.addEventListener("touchstart",e=>x0=e.touches[0].clientX,{passive:true});
+  m.addEventListener("touchend",e=>{if(x0===null)return;const dx=e.changedTouches[0].clientX-x0;
+    if(Math.abs(dx)>70){setVue(dx<0?vue+1:vue-1);} x0=null;},{passive:true});
+}
+
+renderBandeau(); fillFiltres(); renderGalaxie(); wire();
+</script>
+</body>
+</html>
