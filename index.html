@@ -504,7 +504,7 @@ function renderGalaxie(){
    en parcours serpentin (→ ↓ ← ↓ →…), en boucle, à vitesse lente et constante.
    Le flottement (bob) reste sur la carte interne. Stop = fige le convoi, garde le bob. */
 let galRAF=null, galPaused=false, galAcc=0, galLast=0, gSlots=[], gSnake=[], gCells=[];
-const PER_SLOT=9000;
+const PER_SLOT=13000;
 function measureGalaxy(){
   const host=document.getElementById("galaxie");gCells=[...host.children];
   gSlots=gCells.map(c=>({x:c.offsetLeft,y:c.offsetTop}));
