@@ -295,7 +295,7 @@ body.paused .cc-flux{animation-play-state:paused}
    ========================================================================== */
 
 const META = {
-  version:"V2", updated_at:"2026-06-25", today:"2026-06-25",
+  version:"V2", updated_at:"2026-06-26", today:"2026-06-26",
   cap:"On monte étage par étage sur tous les protocoles — PME · IND · TPE · pré-relevé · signal · thématiques.",
   chemin_critique:["etage1","reserialisation","resync_table","t1b","t2_moteur","asr"]
 };
@@ -322,11 +322,11 @@ const CHANTIERS = [
   {id:"reserialisation",titre:"Re-sérialisation après arbitrage des noms",territoire:"T1",etage:"1→2",responsable:"Engine",verifie:"Verif + Sec",securise:"Sec",etat:"fait",critique:true,goulot:false,date_action:"2026-06-25",date_cible:"2026-06-25",date_completion:"2026-06-25",canal:"#arl-engine",
     quoi:"Mettre le fichier-dictionnaire à jour après la décision sur les noms qui fusionnent.",avant:"9 fusions de noms décidées mais pas encore dans le fichier.",maintenant:"Fichier régénéré (107 entrées), zéro doublon, validé par les 3 regards et mergé.",apres:"Place à l'étage 2 (Kata) et à la dérivation (T1.b)."},
   {id:"resync_table",titre:"Étage 2 — poids et grammaire des variables",territoire:"T2",etage:"2",responsable:"Kata",verifie:"Engine",securise:"—",etat:"en_cours",critique:true,goulot:true,date_action:"2026-06-25",date_cible:"2026-06-27",date_completion:null,canal:"#thème-data",
-    quoi:"Donner à chaque variable son poids et ses règles de calcul (la Table). Sans ça, impossible de calculer un score.",avant:"La Table était périmée par rapport au dictionnaire neuf.",maintenant:"Kata resynchronise la Table — c'est LE goulot : tout le calcul attend ça.",apres:"Une fois fini, Engine peut générer la configuration de score (T1.b)."},
-  {id:"compositions",titre:"Étage 2 — composition par profil",territoire:"T2",etage:"2",responsable:"Kata",verifie:"Engine",securise:"—",etat:"en_cours",critique:false,goulot:false,date_action:"2026-06-25",date_cible:"2026-06-27",date_completion:null,canal:"#thème-data",
-    quoi:"Dire quelles variables servent à quel profil (PME, IND, TPE…) et dans quel ordre.",avant:"Seul le profil PME était composé.",maintenant:"Kata étend la composition aux autres profils.",apres:"Fait passer les contrôles de cohérence au vert."},
+    quoi:"Donner à chaque variable son poids et ses règles de calcul (la Table). Sans ça, impossible de calculer un score.",avant:"La Table était périmée par rapport au dictionnaire neuf.",maintenant:"GO donné (GO Viktor acquis) : Kata a ouvert le chantier, scindé en B1 (mapping mécanique → table_index, imminent) et B2 (5 cas de grammaire à arbitrer côté doctrine). C'est LE goulot.",apres:"Le table_index (B1) active le verrou anti-erreur et débloque la config de score (T1.b)."},
+  {id:"compositions",titre:"Étage 2 — composition par profil",territoire:"T2",etage:"2",responsable:"Kata",verifie:"Engine",securise:"—",etat:"fait",critique:false,goulot:false,date_action:"2026-06-26",date_cible:"2026-06-27",date_completion:"2026-06-26",canal:"#thème-data",
+    quoi:"Dire quelles variables servent à quel profil (PME, IND, TPE…) et dans quel ordre.",avant:"Seul le profil PME était composé.",maintenant:"Bouclé : 7 compositions + 7 keys_index sérialisés, tous les contrôles de cohérence au vert (run 0c00759, hub 111). Écart banque/assurance résolu.",apres:"L'étage 2 ne dépend plus que de la resync de la Table."},
   {id:"t1b",titre:"Génération de la configuration de score",territoire:"T1",etage:"4",responsable:"Engine",verifie:"Verif",securise:"Sec",etat:"en_file",critique:true,goulot:false,date_action:"2026-06-25",date_cible:"2026-06-29",date_completion:null,canal:"#arl-engine",
-    quoi:"Fabriquer automatiquement la 'recette de calcul' à partir du dictionnaire + de la Table.",avant:"On écrivait cette recette à la main (risque d'erreur).",maintenant:"En attente : ça démarre dès que l'étage 2 est fini.",apres:"Active le verrou anti-erreur et déverrouille le moteur (T2)."},
+    quoi:"Fabriquer automatiquement la 'recette de calcul' à partir du dictionnaire + de la Table.",avant:"On écrivait cette recette à la main (risque d'erreur).",maintenant:"En attente du table_index (B1) : démarre dès que Kata le livre et qu'Engine le sérialise.",apres:"Active le verrou anti-erreur (gate 3-regards Build) et déverrouille le moteur (T2)."},
   {id:"t2_moteur",titre:"Recâblage du moteur de calcul",territoire:"T2",etage:"5",responsable:"Engine",verifie:"Verif",securise:"Sec",etat:"bloque",critique:true,goulot:false,date_action:"2026-06-24",date_cible:"2026-07-02",date_completion:null,canal:"#arl-engine",
     quoi:"Brancher le moteur qui transforme les réponses en analyse structurée (l'ASR).",avant:"Le moteur tourne sur une ancienne recette.",maintenant:"Bloqué tant que la configuration de score (T1.b) n'est pas prête.",apres:"Produit le premier ASR propre de bout en bout."},
   {id:"asr",titre:"Premier ASR de bout en bout",territoire:"T2",etage:"5",responsable:"Engine",verifie:"Verif",securise:"Sec",etat:"bloque",critique:true,goulot:false,date_action:"2026-06-24",date_cible:"2026-07-04",date_completion:null,canal:"#arl-engine",
@@ -425,7 +425,7 @@ const CHANTIERS = [
    Estimations éditables à la main, comme le reste (phase 2 : alimentées par Notion). */
 const PROGRES={
   etage1:{p:100,d:"moyenne",e:"—"}, reserialisation:{p:100,d:"moyenne",e:"—"},
-  resync_table:{p:45,d:"élevée",e:"~2-3 j"}, compositions:{p:65,d:"moyenne",e:"~1-2 j"},
+  resync_table:{p:55,d:"élevée",e:"~2-3 j"}, compositions:{p:100,d:"moyenne",e:"—"},
   t1b:{p:10,d:"élevée",e:"~2-3 j"}, t2_moteur:{p:5,d:"élevée",e:"~1 sem"}, asr:{p:5,d:"élevée",e:"~1 sem"},
   refresh_gov:{p:45,d:"moyenne",e:"~3-4 j"}, rangement_gov:{p:70,d:"faible",e:"~1 j"}, vision_board:{p:90,d:"moyenne",e:"~1 j"},
   sec_durcissements:{p:55,d:"moyenne",e:"~1 j"}, backup_daily:{p:70,d:"moyenne",e:"~1 j"}, audit_alignblock:{p:15,d:"moyenne",e:"~1-2 j"},
